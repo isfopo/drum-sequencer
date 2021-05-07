@@ -12,8 +12,6 @@ Different modes can be accessed by specific button combinations, listed below. P
 
 ### Main Mode
 
-### Shift Modes
+### Shift Mode
 
 ### Last Step Mode
-
-## Pattern Selection Mode
