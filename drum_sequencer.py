@@ -1,4 +1,3 @@
-import time
 import usb_midi
 import adafruit_midi
 import adafruit_trellism4
@@ -58,8 +57,8 @@ CORRECT_INDEX  =  [ 24, 16,  8, 0,
 note_grid = []
 shift_grid = []
 STARTING_NOTE = 36
-NUMBER_OF_COLUMNS = 4
-NUMBER_OF_ROWS = 8
+NUMBER_OF_COLUMNS = 8
+NUMBER_OF_ROWS = 4
 index = 0
 
 for i in range(NUMBER_OF_COLUMNS):
@@ -71,7 +70,7 @@ for i in range(NUMBER_OF_COLUMNS):
         note += 1
     note_grid.append(column)
     
-#print(list(map(lambda x: list(map(lambda y: y.index, x)), note_grid))) # prints note_grid to show notes
+print(list(map(lambda x: list(map(lambda y: y.index, x)), note_grid))) # prints note_grid to show notes
 
 def reset_colors():
     for column in note_grid:

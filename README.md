@@ -8,7 +8,7 @@ The suggested DAW is Ableton, but should be able to work with any DAW that has M
 
 ## Modes
 
-Different modes can be accessed by specific button combinations, listed below. Pressing these two buttons together will not cause a note to be added to the grid.
+Different modes can be accessed by specific button combinations, listed below. Pressing these two buttons together will not cause a note to be added to the grid, but immediately switch to the mode selected.
 
 ### Main Mode
 
