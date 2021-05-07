@@ -12,6 +12,19 @@ midi = adafruit_midi.MIDI(midi_in=usb_midi.ports[0], midi_out=usb_midi.ports[1],
 
 trellis = adafruit_trellism4.TrellisM4Express(rotation=90)
 
+class Grid:
+    def __init__(self, columns, rows, starting_note, correction):
+            index = 0
+            self.grid = []
+            for i in range(columns):
+                column = []
+                note = starting_note
+                for j in range(rows):
+                    column.append(Note(note, correction[index]))
+                    index += 1
+                    note += 1
+                self.grid.append(column)
+
 class Note:
     def __init__(self, note, index):
         self.note = note
@@ -54,52 +67,52 @@ CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     31, 23, 15, 7 ]
 
 # note grid parameters
-note_grid = []
-shift_grid = []
 STARTING_NOTE = 36
 NUMBER_OF_COLUMNS = 8
 NUMBER_OF_ROWS = 4
-index = 0
 
-for i in range(NUMBER_OF_COLUMNS):
-    column = []
-    note = STARTING_NOTE
-    for j in range(NUMBER_OF_ROWS):
-        column.append(Note(note, CORRECT_INDEX[index]))
-        index += 1
-        note += 1
-    note_grid.append(column)
-    
-print(list(map(lambda x: list(map(lambda y: y.index, x)), note_grid))) # prints note_grid to show notes
+#button combonations
+CLEAR_COMBO = [(3, 0), (0, 0), (3, 1)]
 
-def reset_colors():
-    for column in note_grid:
+notes = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
+shift = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
+
+#print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note_grid to show notes
+
+def reset_colors(notes, note_on, note_off):
+    for column in notes.grid:
         for note in column:
             if note.isOn == True:
-                trellis.pixels._neopixel[note.index] = NOTE_ON
+                trellis.pixels._neopixel[note.index] = note_on
             else:
-                trellis.pixels._neopixel[note.index] = NOTE_OFF
+                trellis.pixels._neopixel[note.index] = note_off
 
-def light_column(column):
-    for i in range(NUMBER_OF_ROWS):
-        trellis.pixels._neopixel[ column + (i*8) ] = COLUMN_COLOR
+def light_column(notes, column, column_color):
+    for i in range(len(notes.grid[0])):
+        trellis.pixels._neopixel[ column + (i*8) ] = column_color
     
-def reset_column(column):
-    for note in note_grid[column]:
+def reset_column(notes, column, note_on, note_off, accent):
+    for note in notes.grid[column]:
         if note.isOn:
             if note.isAccented:
-                trellis.pixels._neopixel[note.index] = ACCENT
+                trellis.pixels._neopixel[note.index] = accent
             else:
-                trellis.pixels._neopixel[note.index] = NOTE_ON
+                trellis.pixels._neopixel[note.index] = note_on
         else:
-            trellis.pixels._neopixel[note.index] = NOTE_OFF
+            trellis.pixels._neopixel[note.index] = note_off
 
-def play_column(column):
-    for note in note_grid[column]:
+def play_column(notes, column):
+    for note in notes.grid[column]:
         note.play()
 
-def stop_notes():
-    map(lambda x: map(lambda y: y.stop(), x), note_grid)
+def stop_notes(notes):
+    map(lambda x: map(lambda y: y.stop(), x), notes.grid)
+
+def clear_grid(notes):
+    for column in notes.grid:
+        for note in column:
+            note.isOn = False
+
 
 #sync counters
 ticks = 0
@@ -115,9 +128,11 @@ held_note = 0
 tick_placeholder = 0
 HOLD_TIME = 48 #in ticks
 button_is_held = False
+combo_pressed = False
 
 #modes
 main_mode = True
+shift_mode = False
 
 while True:
     new_message = midi.receive()
@@ -133,14 +148,14 @@ while True:
                             bars += 1
                         if i == 0:
                             if main_mode:
-                                light_column(7)
-                                reset_column(6)
-                            play_column(7)
+                                light_column(notes, 7, COLUMN_COLOR)
+                                reset_column(notes, 6, NOTE_ON, NOTE_OFF, ACCENT)
+                            play_column(notes, 7)
                         else:
                             if main_mode:
-                                light_column(i-1)
-                                reset_column(i-2)
-                            play_column(i-1)
+                                light_column(notes, i-1, COLUMN_COLOR)
+                                reset_column(notes, i-2, NOTE_ON, NOTE_OFF, ACCENT)
+                            play_column(notes, i-1)
             ticks += 1
             
             
@@ -151,8 +166,8 @@ while True:
             
         if isinstance(new_message, Stop):
             on = False
-            reset_colors()
-            stop_notes()
+            reset_colors(notes, NOTE_ON, NOTE_OFF)
+            stop_notes(notes)
 
             
     old_message = new_message
@@ -161,8 +176,8 @@ while True:
     
     if pressed_buttons != last_press:
         if main_mode:
-            if pressed_buttons:
-                for note in note_grid[pressed_buttons[0][1]]:
+            if pressed_buttons and not combo_pressed:
+                for note in notes.grid[pressed_buttons[0][1]]:
                     if note.note == pressed_buttons[0][0] + STARTING_NOTE:
                         tick_placeholder = ticks
                         held_note = note
@@ -179,10 +194,17 @@ while True:
                     if not held_note.isOn:
                         held_note.toggle()
                     held_note.toggle_accent()
+            if not pressed_buttons:
+                combo_pressed = False
             
-            if len(pressed_buttons) > 1:
-                print(pressed_buttons) # button combo
-                main_mode = False
+            if len(pressed_buttons) > 2:
+                print(pressed_buttons) # 3 button combos will help against acciental combos
+                combo_pressed = True
+                if pressed_buttons == CLEAR_COMBO:
+                    clear_grid(notes)
+                    reset_colors(notes, NOTE_ON, NOTE_OFF)
+                else:
+                    main_mode = False
                 button_is_held = False
         else:
             trellis.pixels._neopixel.fill((255, 0, 0))
