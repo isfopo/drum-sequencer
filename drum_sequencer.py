@@ -1,16 +1,22 @@
+import board
+import busio
+
 import usb_midi
 import adafruit_midi
 import adafruit_trellism4
+import adafruit_adxl34x
 
 from adafruit_midi.timing_clock import TimingClock
 from adafruit_midi.start import Start
 from adafruit_midi.stop import Stop
 from adafruit_midi.note_off import NoteOff
 from adafruit_midi.note_on import NoteOn
+from adafruit_midi.control_change import ControlChange
 
 midi = adafruit_midi.MIDI(midi_in=usb_midi.ports[0], midi_out=usb_midi.ports[1], in_channel=0)
-
 trellis = adafruit_trellism4.TrellisM4Express(rotation=90)
+i2c = busio.I2C(board.ACCELEROMETER_SCL, board.ACCELEROMETER_SDA)
+accelerometer = adafruit_adxl34x.ADXL345(i2c)
 
 class Grid:
     def __init__(self, columns, rows, starting_note, correction):
@@ -72,14 +78,14 @@ NUMBER_OF_COLUMNS = 8
 NUMBER_OF_ROWS    = 4
 
 #button combonations
-BACK_COMBO  = [(2, 0), (0, 0), (2, 1)]
+BACK_COMBO  = [(3, 0), (0, 0), (3, 7)]
 CLEAR_COMBO = [(3, 0), (0, 0), (3, 1)]
 SHIFT_COMBO = [(3, 0), (0, 0), (3, 2)]
 
 notes = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
 shift = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
 
-#print(list(map(lambda x: list(map(lambda y: y.index, x)), shift.grid))) # prints note_grid to show notes
+#print(list(map(lambda x: list(map(lambda y: y.index, x)), shift.grid))) # prints note grid to show notes
 
 def reset_colors(notes, note_on, note_off):
     for column in notes.grid:
@@ -114,6 +120,12 @@ def clear_grid(notes):
     for column in notes.grid:
         for note in column:
             note.isOn = False
+            
+def scale(val, src, dst):
+    output = ((val - src[0]) / (src[1]-src[0])) * (dst[1]-dst[0]) + dst[0]
+    if output < dst[0]: return dst[0]
+    if output > dst[1]: return dst[1]
+    return output
 
 
 #sync counters
@@ -136,6 +148,14 @@ combo_pressed = False
 #modes
 main_mode = True
 shift_mode = False
+
+send_x = True
+send_y = True
+send_z = True
+
+x_cc = 14
+y_cc = 15
+z_cc = 23
 
 while True:
     new_message = midi.receive()
@@ -160,8 +180,8 @@ while True:
                                 reset_column(notes, i-2, NOTE_ON, NOTE_OFF, ACCENT)
                             play_column(notes, i-1)
                             
-            if ticks % 12 == 6: # add to this to create swing amount
-                shift_note += 1
+            if ticks % 12 == 6:
+                shift_note += 1 
                 
                 for i in range(8):
                     if eighth_note % 8 == i:
@@ -206,7 +226,7 @@ while True:
                         
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
-                    trellis.pixels._neopixel[note.index] = NOTE_ON
+                    trellis.pixels._neopixel[held_note.index] = NOTE_ON
                     held_note.toggle()
                     if held_note.isAccented:
                         held_note.toggle_accent()
@@ -242,7 +262,7 @@ while True:
                         
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
-                    trellis.pixels._neopixel[note.index] = SHIFT_NOTE_ON
+                    trellis.pixels._neopixel[held_note.index] = SHIFT_NOTE_ON
                     held_note.toggle()
                     if held_note.isAccented:
                         held_note.toggle_accent()
@@ -255,7 +275,6 @@ while True:
                 combo_pressed = False
             
             if len(pressed_buttons) > 2:
-                print(pressed_buttons) # 3 button combos will help against accidental combos
                 combo_pressed = True
                 if pressed_buttons == BACK_COMBO:
                     main_mode = True
@@ -270,3 +289,10 @@ while True:
         
     last_press = pressed_buttons
     
+    if on:
+        if send_x:
+            midi.send(ControlChange(x_cc, int(scale(accelerometer.acceleration[1], (-10, 10), (0, 127)))))
+        if send_y:
+            midi.send(ControlChange(y_cc, int(scale(accelerometer.acceleration[0], (-10, 10), (0, 127)))))
+        if send_z:
+            midi.send(ControlChange(z_cc, int(scale(accelerometer.acceleration[2], (-10, 10), (0, 127)))))
