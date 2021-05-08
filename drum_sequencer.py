@@ -48,14 +48,14 @@ class Note:
         self.isAccented = True if not self.isAccented else False
         
 #colors
-NOTE_ON = (0, 63, 63)
-NOTE_OFF = (0, 0, 0)
-COLUMN_COLOR = (255, 0, 50)
-ACCENT = (0, 255, 225)
-SHIFT_NOTE_ON = (0, 63, 63)
-SHIFT_NOTE_OFF = (0, 0, 0)
-SHIFT_COLUMN_COLOR = (255, 0, 50)
-SHIFT_ACCENT = (0, 255, 225)
+NOTE_ON            = (0, 63, 63)
+NOTE_OFF           = (0, 0, 0)
+COLUMN_COLOR       = (255, 0, 50)
+ACCENT             = (0, 191, 225)
+SHIFT_NOTE_ON      = (63, 63, 0)
+SHIFT_NOTE_OFF     = (0, 0, 0)
+SHIFT_COLUMN_COLOR = (50, 0, 255)
+SHIFT_ACCENT       = (255, 255, 0)
 
 CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     25, 17,  9, 1,
@@ -67,17 +67,19 @@ CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     31, 23, 15, 7 ]
 
 # note grid parameters
-STARTING_NOTE = 36
+STARTING_NOTE     = 36
 NUMBER_OF_COLUMNS = 8
-NUMBER_OF_ROWS = 4
+NUMBER_OF_ROWS    = 4
 
 #button combonations
+BACK_COMBO  = [(2, 0), (0, 0), (2, 1)]
 CLEAR_COMBO = [(3, 0), (0, 0), (3, 1)]
+SHIFT_COMBO = [(3, 0), (0, 0), (3, 2)]
 
 notes = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
 shift = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
 
-#print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note_grid to show notes
+#print(list(map(lambda x: list(map(lambda y: y.index, x)), shift.grid))) # prints note_grid to show notes
 
 def reset_colors(notes, note_on, note_off):
     for column in notes.grid:
@@ -117,6 +119,7 @@ def clear_grid(notes):
 #sync counters
 ticks = 0
 eighth_note = 0
+shift_note = 0
 bars = 0
 
 #message placeholders
@@ -156,6 +159,24 @@ while True:
                                 light_column(notes, i-1, COLUMN_COLOR)
                                 reset_column(notes, i-2, NOTE_ON, NOTE_OFF, ACCENT)
                             play_column(notes, i-1)
+                            
+            if ticks % 12 == 6: # add to this to create swing amount
+                shift_note += 1
+                
+                for i in range(8):
+                    if eighth_note % 8 == i:
+                        if i == 1:
+                            bars += 1
+                        if i == 0:
+                            if shift_mode:
+                                light_column(shift, 7, SHIFT_COLUMN_COLOR)
+                                reset_column(shift, 6, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
+                            play_column(shift, 7)
+                        else:
+                            if shift_mode:
+                                light_column(shift, i-1, SHIFT_COLUMN_COLOR)
+                                reset_column(shift, i-2, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
+                            play_column(shift, i-1)
             ticks += 1
             
             
@@ -203,9 +224,47 @@ while True:
                 if pressed_buttons == CLEAR_COMBO:
                     clear_grid(notes)
                     reset_colors(notes, NOTE_ON, NOTE_OFF)
+                if pressed_buttons == SHIFT_COMBO:
+                    main_mode = False
+                    shift_mode = True
+                    reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF)
                 else:
                     main_mode = False
                 button_is_held = False
+        
+        elif shift_mode:
+            if pressed_buttons and not combo_pressed:
+                for note in shift.grid[pressed_buttons[0][1]]:
+                    if note.note == pressed_buttons[0][0] + STARTING_NOTE:
+                        tick_placeholder = ticks
+                        held_note = note
+                        button_is_held = True
+                        
+            elif button_is_held:
+                if ticks - tick_placeholder < HOLD_TIME:
+                    trellis.pixels._neopixel[note.index] = SHIFT_NOTE_ON
+                    held_note.toggle()
+                    if held_note.isAccented:
+                        held_note.toggle_accent()
+                    button_is_held = False
+                else:
+                    if not held_note.isOn:
+                        held_note.toggle()
+                    held_note.toggle_accent()
+            if not pressed_buttons:
+                combo_pressed = False
+            
+            if len(pressed_buttons) > 2:
+                print(pressed_buttons) # 3 button combos will help against acciental combos
+                combo_pressed = True
+                if pressed_buttons == BACK_COMBO:
+                    main_mode = True
+                    shift_mode = False
+                    reset_colors(notes, NOTE_ON, NOTE_OFF)
+                else:
+                    main_mode = False
+                button_is_held = False
+        
         else:
             trellis.pixels._neopixel.fill((255, 0, 0))
         
