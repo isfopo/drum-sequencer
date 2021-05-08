@@ -219,7 +219,7 @@ while True:
                 combo_pressed = False
             
             if len(pressed_buttons) > 2:
-                print(pressed_buttons) # 3 button combos will help against acciental combos
+                print(pressed_buttons) # 3 button combos will help against accidental combos
                 combo_pressed = True
                 if pressed_buttons == CLEAR_COMBO:
                     clear_grid(notes)
@@ -255,7 +255,7 @@ while True:
                 combo_pressed = False
             
             if len(pressed_buttons) > 2:
-                print(pressed_buttons) # 3 button combos will help against acciental combos
+                print(pressed_buttons) # 3 button combos will help against accidental combos
                 combo_pressed = True
                 if pressed_buttons == BACK_COMBO:
                     main_mode = True
