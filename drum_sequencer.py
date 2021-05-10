@@ -153,6 +153,37 @@ def scale(val, src, dst):
     if output > dst[1]: return dst[1]
     return output
 
+def handle_axis(mode, axis, up_cc, down_cc):
+    if mode == 'direct':
+        midi.send(ControlChange(up_cc, int(scale(axis, (-10, 10), (0, 127)))))
+    elif mode == 'flip':
+        midi.send(ControlChange(up_cc, int(scale(axis, (10, -10), (0, 127)))))
+    elif mode == 'split':
+        if axis > 0:
+            midi.send(ControlChange(up_cc, int(scale(axis, (0, 10), (0, 127)))))
+        else:
+            midi.send(ControlChange(down_cc, int(scale(axis, (0, -10), (0, 127)))))
+    elif mode == 'on_off':
+        if axis > 0: # is there a way to only send the cc on change?
+            midi.send(ControlChange(up_cc, 127))
+        else:
+            midi.send(ControlChange(up_cc, 0))
+    elif mode == 'flip_on_off':
+        if axis > 0:
+            midi.send(ControlChange(up_cc, 0))
+        else:
+            midi.send(ControlChange(up_cc, 127))
+    elif mode == 'split_on_off':
+        if axis > 0:
+            if axis > 5:
+                midi.send(ControlChange(up_cc, 127))
+            else:
+                midi.send(ControlChange(up_cc, 0))
+        else:    
+            if axis < -5:
+                midi.send(ControlChange(down_cc, 127))
+            else:
+                midi.send(ControlChange(down_cc, 0))
 
 #sync counters
 ticks = 0
@@ -179,9 +210,9 @@ manual_note_mode = False
 manual_cc_mode = False
 
 #axis modes
-x_mode = 'direct'
-y_mode = 'direct'
-z_mode = 'direct'
+x_mode = 'split_on_off'
+y_mode = 'none'
+z_mode = 'none'
 
 #axis cc's
 x_up_cc = 14
@@ -190,6 +221,8 @@ y_up_cc = 23 #TODO make sure these are unused
 y_down_cc = 24
 z_up_cc = 25
 z_down_cc = 26
+
+x_switch = False
 
 while True:
     
@@ -266,6 +299,7 @@ while True:
     """
     Read Buttons
     """
+    
     pressed_buttons = trellis.pressed_keys
     
     if pressed_buttons != last_press:
@@ -296,7 +330,7 @@ while True:
                 combo_pressed = False
             
             """
-            Combos
+            Main Combos
             """
             if len(pressed_buttons) > 1:
                 combo_pressed = True
@@ -304,18 +338,25 @@ while True:
                     clear_grid(notes)
                     clear_grid(shift)
                     reset_colors(notes, NOTE_ON, NOTE_OFF)
+                    
                 elif pressed_buttons == SHIFT_COMBO:
                     main_mode = False
                     shift_mode = True
                     reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF)
+                    
                 elif pressed_buttons == TOGGLE_X_COMBO:
                     send_x = True if not send_x else False
+                    
                 elif pressed_buttons == TOGGLE_Y_COMBO:
                     send_y = True if not send_y else False
+                    
                 elif pressed_buttons == TOGGLE_Z_COMBO:
                     send_z = True if not send_z else False
-                elif pressed_buttons == MANUAL_CC_COMBO:
-                    print(len(pressed_buttons))
+                    
+                elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
+                    if len(pressed_buttons) > 2:
+                        print(pressed_buttons[0])
+                    
                 elif pressed_buttons == MANUAL_NOTE_COMBO:
                     if len(pressed_buttons) > 2:
                         print(pressed_buttons[2])
@@ -350,7 +391,7 @@ while True:
                 combo_pressed = False
             
             """
-            Combos
+            Shift Combos
             """
             if len(pressed_buttons) > 2:
                 combo_pressed = True
@@ -375,87 +416,7 @@ while True:
     Axis CC Modes
     """
     if on:
-        if x_mode == 'direct':
-            midi.send(ControlChange(x_up_cc, int(scale(accelerometer.acceleration[1], (-10, 10), (0, 127)))))
-        elif x_mode == 'flip':
-            midi.send(ControlChange(x_up_cc, int(scale(accelerometer.acceleration[1], (-10, 10), (127, 0)))))
-        elif x_mode == 'split':
-            if accelerometer.acceleration[1] > 0:
-                midi.send(ControlChange(x_up_cc, int(scale(accelerometer.acceleration[1], (0, 10), (0, 127)))))
-            else:
-                midi.send(ControlChange(x_down_cc, int(scale(accelerometer.acceleration[1], (-10, 0), (0, 127)))))
-        elif x_mode == 'on_off':
-            if accelerometer.acceleration[1] > 0:
-                midi.send(ControlChange(x_up_cc, 127))
-            else:
-                midi.send(ControlChange(x_up_cc, 0))
-        elif x_mode == 'flip_on_off':
-            if accelerometer.acceleration[1] > 0:
-                midi.send(ControlChange(x_up_cc, 0))
-            else:
-                midi.send(ControlChange(x_up_cc, 127))
-        elif x_mode == 'split_on_off':
-            if accelerometer.acceleration[1] > 5:
-                midi.send(ControlChange(x_up_cc, 127))
-            elif accelerometer.acceleration[1] < -5:
-                midi.send(ControlChange(x_down_cc, 127))
-            else:
-                midi.send(ControlChange(x_up_cc, 0))
-                midi.send(ControlChange(x_up_cc, 0))
+        handle_axis(x_mode, accelerometer.acceleration[1], x_up_cc, x_down_cc)
+        handle_axis(y_mode, accelerometer.acceleration[0], y_up_cc, y_down_cc)
+        handle_axis(z_mode, accelerometer.acceleration[2], z_up_cc, z_down_cc)
 
-
-        if y_mode == 'direct':
-            midi.send(ControlChange(y_up_cc, int(scale(accelerometer.acceleration[0], (-10, 10), (0, 127)))))
-        elif y_mode == 'flip':
-            midi.send(ControlChange(y_up_cc, int(scale(accelerometer.acceleration[0], (-10, 10), (127, 0)))))
-        elif y_mode == 'split':
-            if accelerometer.acceleration[0] > 0:
-                midi.send(ControlChange(y_up_cc, int(scale(accelerometer.acceleration[0], (0, 10), (0, 127)))))
-            else:
-                midi.send(ControlChange(y_down_cc, int(scale(accelerometer.acceleration[0], (-10, 0), (0, 127)))))
-        elif y_mode == 'on_off':
-            if accelerometer.acceleration[0] > 0:
-                midi.send(ControlChange(y_up_cc, 127))
-            else:
-                midi.send(ControlChange(y_up_cc, 0))
-        elif y_mode == 'flip_on_off':
-            if accelerometer.acceleration[0] > 0:
-                midi.send(ControlChange(y_up_cc, 0))
-            else:
-                midi.send(ControlChange(y_up_cc, 127))
-        elif y_mode == 'split_on_off':
-            if accelerometer.acceleration[0] > 5:
-                midi.send(ControlChange(y_up_cc, 127))
-            elif accelerometer.acceleration[0] < -5:
-                midi.send(ControlChange(y_down_cc, 127))
-            else:
-                midi.send(ControlChange(y_up_cc, 0))
-                midi.send(ControlChange(y_up_cc, 0))
-
-        if z_mode == 'direct':
-            midi.send(ControlChange(z_up_cc, int(scale(accelerometer.acceleration[2], (-10, 10), (0, 127)))))
-        elif z_mode == 'flip':
-            midi.send(ControlChange(z_up_cc, int(scale(accelerometer.acceleration[2], (-10, 10), (127, 0)))))
-        elif z_mode == 'split':
-            if accelerometer.acceleration[2] > 0:
-                midi.send(ControlChange(z_up_cc, int(scale(accelerometer.acceleration[2], (0, 10), (0, 127)))))
-            else:
-                midi.send(ControlChange(z_down_cc, int(scale(accelerometer.acceleration[2], (-10, 0), (0, 127)))))
-        elif z_mode == 'on_off':
-            if accelerometer.acceleration[2] > 0:
-                midi.send(ControlChange(z_up_cc, 127))
-            else:
-                midi.send(ControlChange(z_up_cc, 0))
-        elif z_mode == 'flip_on_off':
-            if accelerometer.acceleration[2] > 0:
-                midi.send(ControlChange(z_up_cc, 0))
-            else:
-                midi.send(ControlChange(z_up_cc, 127))
-        elif z_mode == 'split_on_off':
-            if accelerometer.acceleration[2] > 5:
-                midi.send(ControlChange(z_up_cc, 127))
-            elif accelerometer.acceleration[2] < -5:
-                midi.send(ControlChange(z_down_cc, 127))
-            else:
-                midi.send(ControlChange(z_up_cc, 0))
-                midi.send(ControlChange(z_up_cc, 0))
