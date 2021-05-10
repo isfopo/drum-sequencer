@@ -98,13 +98,15 @@ NUMBER_OF_COLUMNS = 8
 NUMBER_OF_ROWS    = 4
 
 #button combonations
-BACK_COMBO     = [(3, 0), (0, 0), (3, 7)]
-CLEAR_COMBO    = [(3, 0), (0, 0), (3, 1)]
-SHIFT_COMBO    = [(3, 0), (0, 0), (3, 2)]
-EDIT_CC_COMBO  = [(3, 0), (0, 0), (3, 3)]
-TOGGLE_X_COMBO = [(2, 0), (0, 0), (2, 1)]
-TOGGLE_Y_COMBO = [(2, 0), (0, 0), (2, 2)]
-TOGGLE_Z_COMBO = [(2, 0), (0, 0), (2, 3)]
+BACK_COMBO        = [(3, 0), (0, 0), (3, 7)]
+CLEAR_COMBO       = [(3, 0), (0, 0), (3, 1)]
+SHIFT_COMBO       = [(3, 0), (0, 0), (3, 2)]
+EDIT_CC_COMBO     = [(3, 0), (0, 0), (3, 3)]
+MANUAL_CC_COMBO   = [(3, 4), (0, 4)]
+MANUAL_NOTE_COMBO = [(3, 4), (0, 5)]
+TOGGLE_X_COMBO    = [(2, 0), (0, 0), (2, 1)]
+TOGGLE_Y_COMBO    = [(2, 0), (0, 0), (2, 2)]
+TOGGLE_Z_COMBO    = [(2, 0), (0, 0), (2, 3)]
 
 notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
 shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
@@ -191,10 +193,21 @@ z_up_cc = 25
 z_down_cc = 26
 
 while True:
+    
+    """
+    Receive MIDI
+    """
+    
     new_message = midi.receive()
     if new_message != old_message and new_message != None:
 
+        """
+        Sync To TimingClock
+        """
         if isinstance(new_message, TimingClock) and on:
+            """
+            Main Grid
+            """
             if ticks % 12 == 0:
                 eighth_note += 1
                 
@@ -213,6 +226,9 @@ while True:
                                 reset_column(notes, i-2, NOTE_ON, NOTE_OFF, ACCENT)
                             play_column(notes, i-1)
                             
+            """
+            Shift Grid
+            """
             if ticks % 12 == 6:
                 shift_note += 1 
                 
@@ -232,7 +248,9 @@ while True:
                             play_column(shift, i-1)
             ticks += 1
             
-            
+        """
+        Start and Stop
+        """
         if isinstance(new_message, Start):
             on = True
             ticks = 0
@@ -246,9 +264,15 @@ while True:
             
     old_message = new_message
     
+    """
+    Read Buttons
+    """
     pressed_buttons = trellis.pressed_keys
     
     if pressed_buttons != last_press:
+        """
+        Main Mode
+        """
         if main_mode:
             if pressed_buttons and not combo_pressed:
                 for note in notes.grid[pressed_buttons[0][1]]:
@@ -271,7 +295,10 @@ while True:
             if not pressed_buttons:
                 combo_pressed = False
             
-            if len(pressed_buttons) > 2:
+            """
+            Combos
+            """
+            if len(pressed_buttons) > 1:
                 combo_pressed = True
                 if pressed_buttons == CLEAR_COMBO:
                     clear_grid(notes)
@@ -287,10 +314,18 @@ while True:
                     send_y = True if not send_y else False
                 elif pressed_buttons == TOGGLE_Z_COMBO:
                     send_z = True if not send_z else False
+                elif pressed_buttons == MANUAL_CC_COMBO:
+                    print(len(pressed_buttons))
+                elif pressed_buttons == MANUAL_NOTE_COMBO:
+                    if len(pressed_buttons) > 2:
+                        print(pressed_buttons[2])
                 else:
                     print(pressed_buttons)
                 button_is_held = False
         
+            """
+            Shift Mode
+            """
         elif shift_mode:
             if pressed_buttons and not combo_pressed:
                 for note in shift.grid[pressed_buttons[0][1]]:
@@ -313,6 +348,9 @@ while True:
             if not pressed_buttons:
                 combo_pressed = False
             
+            """
+            Combos
+            """
             if len(pressed_buttons) > 2:
                 combo_pressed = True
                 if pressed_buttons == BACK_COMBO:
@@ -332,6 +370,9 @@ while True:
         
     last_press = pressed_buttons
     
+    """
+    Axis CC Modes
+    """
     if on:
         if x_mode == 'direct':
             midi.send(ControlChange(x_up_cc, int(scale(accelerometer.acceleration[1], (-10, 10), (0, 127)))))
