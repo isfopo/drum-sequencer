@@ -283,13 +283,14 @@ while True:
                         
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
-                    trellis.pixels._neopixel[held_note.index] = NOTE_ON
+                    trellis.pixels._neopixel[held_note.index] = NOTE_ON if not held_note.isOn else NOTE_OFF
                     held_note.toggle()
                     if held_note.isAccented:
                         held_note.toggle_accent()
                     button_is_held = False
                 else:
                     if not held_note.isOn:
+                        trellis.pixels._neopixel[held_note.index] = ACCENT if not held_note.isAccented else NOTE_OFF
                         held_note.toggle()
                     held_note.toggle_accent()
             if not pressed_buttons:
