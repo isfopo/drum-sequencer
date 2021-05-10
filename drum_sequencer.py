@@ -18,7 +18,7 @@ trellis = adafruit_trellism4.TrellisM4Express(rotation=90)
 i2c = busio.I2C(board.ACCELEROMETER_SCL, board.ACCELEROMETER_SDA)
 accelerometer = adafruit_adxl34x.ADXL345(i2c)
 
-class Grid:
+class NoteGrid:
     def __init__(self, columns, rows, starting_note, correction):
             index = 0
             self.grid = []
@@ -85,8 +85,8 @@ TOGGLE_X_COMBO = [(2, 0), (0, 0), (2, 1)]
 TOGGLE_Y_COMBO = [(2, 0), (0, 0), (2, 2)]
 TOGGLE_Z_COMBO = [(2, 0), (0, 0), (2, 3)]
 
-notes = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
-shift = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
+notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
+shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
 
 #print(list(map(lambda x: list(map(lambda y: y.index, x)), shift.grid))) # prints note grid to show notes
 
@@ -151,6 +151,9 @@ combo_pressed = False
 #modes
 main_mode = True
 shift_mode = False
+cc_edit_mode = False
+manual_note_mode = False
+manual_cc_mode = False
 
 send_x = True
 send_y = True
@@ -168,8 +171,8 @@ while True:
             if ticks % 12 == 0:
                 eighth_note += 1
                 
-                for i in range(8):
-                    if eighth_note % 8 == i:
+                for i in range(NUMBER_OF_COLUMNS):
+                    if eighth_note % NUMBER_OF_COLUMNS == i:
                         if i == 1:
                             bars += 1
                         if i == 0:
@@ -186,8 +189,8 @@ while True:
             if ticks % 12 == 6:
                 shift_note += 1 
                 
-                for i in range(8):
-                    if eighth_note % 8 == i:
+                for i in range(NUMBER_OF_COLUMNS):
+                    if eighth_note % NUMBER_OF_COLUMNS == i:
                         if i == 1:
                             bars += 1
                         if i == 0:
