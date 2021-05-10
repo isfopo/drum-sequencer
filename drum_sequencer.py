@@ -49,6 +49,12 @@ class Cell:
         
     def toggle(self):
         self.isOn = True if not self.isOn else False
+        
+    def on(self):
+        self.isOn = True
+        
+    def off(self):
+        self.isOn = False
 
 class Note:
     def __init__(self, note, index):
@@ -80,7 +86,7 @@ ACCENT             = (63, 191, 225)
 SHIFT_NOTE_ON      = (63, 63, 0)
 SHIFT_COLUMN_COLOR = (50, 0, 255)
 SHIFT_ACCENT       = (255, 191, 63)
-CC_MODE_COLOR      = (255, 191, 191)
+EDIT_CC_COLOR      = (255, 191, 191)
 
 CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     25, 17,  9, 1,
@@ -164,7 +170,7 @@ def handle_axis(mode, axis, up_cc, down_cc):
         else:
             midi.send(ControlChange(down_cc, int(scale(axis, (0, -10), (0, 127)))))
     elif mode == 'on_off':
-        if axis > 0: # is there a way to only send the cc on change?
+        if axis > 0: #TODO is there a way to only send the cc on change?
             midi.send(ControlChange(up_cc, 127))
         else:
             midi.send(ControlChange(up_cc, 0))
@@ -352,7 +358,12 @@ while True:
                     
                 elif pressed_buttons == TOGGLE_Z_COMBO:
                     send_z = True if not send_z else False
-                    
+                
+                elif pressed_buttons == EDIT_CC_COMBO:
+                    main_mode = False
+                    edit_cc_mode = True
+                    reset_colors(cc_edit, EDIT_CC_COLOR, NOTE_OFF)
+                
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     if len(pressed_buttons) > 2:
                         print(pressed_buttons[0])
@@ -393,7 +404,7 @@ while True:
             """
             Shift Combos
             """
-            if len(pressed_buttons) > 2:
+            if len(pressed_buttons) > 2: #TODO include mode combos here as well
                 combo_pressed = True
                 if pressed_buttons == BACK_COMBO:
                     main_mode = True
@@ -406,10 +417,70 @@ while True:
                 else:
                     print(pressed_buttons)
                 button_is_held = False
-        
-        else:
-            trellis.pixels._neopixel.fill((255, 0, 0))
-        
+    
+        elif edit_cc_mode:
+            if pressed_buttons and not combo_pressed:
+                if pressed_buttons[0][0] == 2:
+                    if pressed_buttons[0][1] == 1:
+                        x_mode = 'direct'
+                    if pressed_buttons[0][1] == 2:
+                        x_mode = 'flip'
+                    if pressed_buttons[0][1] == 3:
+                        x_mode = 'split'
+                    if pressed_buttons[0][1] == 4:
+                        x_mode = 'on_off'
+                    if pressed_buttons[0][1] == 5:
+                        x_mode = 'flip_on_off'
+                    if pressed_buttons[0][1] == 6:
+                        x_mode = 'split_on_off'
+                    if pressed_buttons[0][1] == 7:
+                        x_mode = 'none'
+                if pressed_buttons[0][0] == 1:
+                    if pressed_buttons[0][1] == 1:
+                        y_mode = 'direct'
+                    if pressed_buttons[0][1] == 2:
+                        y_mode = 'flip'
+                    if pressed_buttons[0][1] == 3:
+                        y_mode = 'split'
+                    if pressed_buttons[0][1] == 4:
+                        y_mode = 'on_off'
+                    if pressed_buttons[0][1] == 5:
+                        y_mode = 'flip_on_off'
+                    if pressed_buttons[0][1] == 6:
+                        y_mode = 'split_on_off'
+                    if pressed_buttons[0][1] == 7:
+                        y_mode = 'none'
+                if pressed_buttons[0][0] == 0:
+                    if pressed_buttons[0][1] == 1:
+                        z_mode = 'direct'
+                    if pressed_buttons[0][1] == 2:
+                        z_mode = 'flip'
+                    if pressed_buttons[0][1] == 3:
+                        z_mode = 'split'
+                    if pressed_buttons[0][1] == 4:
+                        z_mode = 'on_off'
+                    if pressed_buttons[0][1] == 5:
+                        z_mode = 'flip_on_off'
+                    if pressed_buttons[0][1] == 6:
+                        z_mode = 'split_on_off'
+                    if pressed_buttons[0][1] == 7:
+                        z_mode = 'none'
+                else:
+                    print(pressed_buttons)
+            
+            """
+            Shift Combos
+            """
+            if len(pressed_buttons) > 2:
+                if pressed_buttons == BACK_COMBO:
+                    main_mode = True
+                    edit_cc_mode = False
+                    reset_colors(notes, NOTE_ON, NOTE_OFF)
+                else:
+                    print(pressed_buttons)
+            if not pressed_buttons:
+                combo_pressed = False
+            
     last_press = pressed_buttons
     
     """
