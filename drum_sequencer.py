@@ -177,13 +177,18 @@ cc_edit_mode = False
 manual_note_mode = False
 manual_cc_mode = False
 
-send_x = True
-send_y = True
-send_z = True
+#axis modes
+x_mode = 'direct'
+y_mode = 'direct'
+z_mode = 'direct'
 
-x_cc = 14
-y_cc = 15
-z_cc = 23
+#axis cc's
+x_up_cc = 14
+x_down_cc = 15
+y_up_cc = 23 #TODO make sure these are unused
+y_down_cc = 24
+z_up_cc = 25
+z_down_cc = 26
 
 while True:
     new_message = midi.receive()
@@ -328,9 +333,87 @@ while True:
     last_press = pressed_buttons
     
     if on:
-        if send_x:
-            midi.send(ControlChange(x_cc, int(scale(accelerometer.acceleration[1], (-10, 10), (0, 127)))))
-        if send_y:
-            midi.send(ControlChange(y_cc, int(scale(accelerometer.acceleration[0], (-10, 10), (0, 127)))))
-        if send_z:
-            midi.send(ControlChange(z_cc, int(scale(accelerometer.acceleration[2], (-10, 10), (0, 127)))))
+        if x_mode == 'direct':
+            midi.send(ControlChange(x_up_cc, int(scale(accelerometer.acceleration[1], (-10, 10), (0, 127)))))
+        elif x_mode == 'flip':
+            midi.send(ControlChange(x_up_cc, int(scale(accelerometer.acceleration[1], (-10, 10), (127, 0)))))
+        elif x_mode == 'split':
+            if accelerometer.acceleration[1] > 0:
+                midi.send(ControlChange(x_up_cc, int(scale(accelerometer.acceleration[1], (0, 10), (0, 127)))))
+            else:
+                midi.send(ControlChange(x_down_cc, int(scale(accelerometer.acceleration[1], (-10, 0), (0, 127)))))
+        elif x_mode == 'on_off':
+            if accelerometer.acceleration[1] > 0:
+                midi.send(ControlChange(x_up_cc, 127))
+            else:
+                midi.send(ControlChange(x_up_cc, 0))
+        elif x_mode == 'flip_on_off':
+            if accelerometer.acceleration[1] > 0:
+                midi.send(ControlChange(x_up_cc, 0))
+            else:
+                midi.send(ControlChange(x_up_cc, 127))
+        elif x_mode == 'split_on_off':
+            if accelerometer.acceleration[1] > 5:
+                midi.send(ControlChange(x_up_cc, 127))
+            elif accelerometer.acceleration[1] < -5:
+                midi.send(ControlChange(x_down_cc, 127))
+            else:
+                midi.send(ControlChange(x_up_cc, 0))
+                midi.send(ControlChange(x_up_cc, 0))
+
+
+        if y_mode == 'direct':
+            midi.send(ControlChange(y_up_cc, int(scale(accelerometer.acceleration[0], (-10, 10), (0, 127)))))
+        elif y_mode == 'flip':
+            midi.send(ControlChange(y_up_cc, int(scale(accelerometer.acceleration[0], (-10, 10), (127, 0)))))
+        elif y_mode == 'split':
+            if accelerometer.acceleration[0] > 0:
+                midi.send(ControlChange(y_up_cc, int(scale(accelerometer.acceleration[0], (0, 10), (0, 127)))))
+            else:
+                midi.send(ControlChange(y_down_cc, int(scale(accelerometer.acceleration[0], (-10, 0), (0, 127)))))
+        elif y_mode == 'on_off':
+            if accelerometer.acceleration[0] > 0:
+                midi.send(ControlChange(y_up_cc, 127))
+            else:
+                midi.send(ControlChange(y_up_cc, 0))
+        elif y_mode == 'flip_on_off':
+            if accelerometer.acceleration[0] > 0:
+                midi.send(ControlChange(y_up_cc, 0))
+            else:
+                midi.send(ControlChange(y_up_cc, 127))
+        elif y_mode == 'split_on_off':
+            if accelerometer.acceleration[0] > 5:
+                midi.send(ControlChange(y_up_cc, 127))
+            elif accelerometer.acceleration[0] < -5:
+                midi.send(ControlChange(y_down_cc, 127))
+            else:
+                midi.send(ControlChange(y_up_cc, 0))
+                midi.send(ControlChange(y_up_cc, 0))
+
+        if z_mode == 'direct':
+            midi.send(ControlChange(z_up_cc, int(scale(accelerometer.acceleration[2], (-10, 10), (0, 127)))))
+        elif z_mode == 'flip':
+            midi.send(ControlChange(z_up_cc, int(scale(accelerometer.acceleration[2], (-10, 10), (127, 0)))))
+        elif z_mode == 'split':
+            if accelerometer.acceleration[2] > 0:
+                midi.send(ControlChange(z_up_cc, int(scale(accelerometer.acceleration[2], (0, 10), (0, 127)))))
+            else:
+                midi.send(ControlChange(z_down_cc, int(scale(accelerometer.acceleration[2], (-10, 0), (0, 127)))))
+        elif z_mode == 'on_off':
+            if accelerometer.acceleration[2] > 0:
+                midi.send(ControlChange(z_up_cc, 127))
+            else:
+                midi.send(ControlChange(z_up_cc, 0))
+        elif z_mode == 'flip_on_off':
+            if accelerometer.acceleration[2] > 0:
+                midi.send(ControlChange(z_up_cc, 0))
+            else:
+                midi.send(ControlChange(z_up_cc, 127))
+        elif z_mode == 'split_on_off':
+            if accelerometer.acceleration[2] > 5:
+                midi.send(ControlChange(z_up_cc, 127))
+            elif accelerometer.acceleration[2] < -5:
+                midi.send(ControlChange(z_down_cc, 127))
+            else:
+                midi.send(ControlChange(z_up_cc, 0))
+                midi.send(ControlChange(z_up_cc, 0))
