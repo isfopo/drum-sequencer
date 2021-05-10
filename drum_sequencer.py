@@ -107,6 +107,7 @@ BACK_COMBO        = [(3, 0), (0, 0), (3, 7)]
 CLEAR_COMBO       = [(3, 0), (0, 0), (3, 1)]
 SHIFT_COMBO       = [(3, 0), (0, 0), (3, 2)]
 EDIT_CC_COMBO     = [(3, 0), (0, 0), (3, 3)]
+EDIT_CC_BACK      = [(3, 0), (3, 1), (3, 7)]
 MANUAL_CC_COMBO   = [(3, 4), (0, 4)]
 MANUAL_NOTE_COMBO = [(3, 4), (0, 5)]
 TOGGLE_X_COMBO    = [(2, 0), (0, 0), (2, 1)]
@@ -192,22 +193,13 @@ def handle_axis(mode, axis, up_cc, down_cc):
                 midi.send(ControlChange(down_cc, 0))
 
 def handle_select_mode(pressed_buttons):
-    if pressed_buttons[0][1] == 1:
-        return 'direct'
-    if pressed_buttons[0][1] == 2:
-        return 'flip'
-    if pressed_buttons[0][1] == 3:
-        return 'split'
-    if pressed_buttons[0][1] == 4:
-        return 'on_off'
-    if pressed_buttons[0][1] == 5:
-        return 'flip_on_off'
-    if pressed_buttons[0][1] == 6:
-        return 'split_on_off'
-    if pressed_buttons[0][1] == 7:
-        return 'none'
-    else:
-        return 'none'
+    if pressed_buttons[0][1] == 1: return 'direct'
+    if pressed_buttons[0][1] == 2: return 'flip'
+    if pressed_buttons[0][1] == 3: return 'split'
+    if pressed_buttons[0][1] == 4: return 'on_off'
+    if pressed_buttons[0][1] == 5: return 'flip_on_off'
+    if pressed_buttons[0][1] == 6: return 'split_on_off'
+    else: return 'none'
         
 #sync counters
 ticks = 0
@@ -455,7 +447,7 @@ while True:
             Edit CC Combos
             """
             if len(pressed_buttons) > 2:
-                if pressed_buttons == BACK_COMBO:
+                if pressed_buttons == EDIT_CC_BACK:
                     main_mode = True
                     edit_cc_mode = False
                     reset_colors(notes, NOTE_ON, NOTE_OFF)
