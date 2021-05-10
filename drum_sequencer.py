@@ -191,6 +191,24 @@ def handle_axis(mode, axis, up_cc, down_cc):
             else:
                 midi.send(ControlChange(down_cc, 0))
 
+def handle_select_mode(pressed_buttons):
+    if pressed_buttons[0][1] == 1:
+        return 'direct'
+    if pressed_buttons[0][1] == 2:
+        return 'flip'
+    if pressed_buttons[0][1] == 3:
+        return 'split'
+    if pressed_buttons[0][1] == 4:
+        return 'on_off'
+    if pressed_buttons[0][1] == 5:
+        return 'flip_on_off'
+    if pressed_buttons[0][1] == 6:
+        return 'split_on_off'
+    if pressed_buttons[0][1] == 7:
+        return 'none'
+    else:
+        return 'none'
+        
 #sync counters
 ticks = 0
 eighth_note = 0
@@ -418,58 +436,23 @@ while True:
                     print(pressed_buttons)
                 button_is_held = False
     
+            """
+            Edit CC Mode
+            """
         elif edit_cc_mode:
             if pressed_buttons and not combo_pressed:
+ 
                 if pressed_buttons[0][0] == 2:
-                    if pressed_buttons[0][1] == 1:
-                        x_mode = 'direct'
-                    if pressed_buttons[0][1] == 2:
-                        x_mode = 'flip'
-                    if pressed_buttons[0][1] == 3:
-                        x_mode = 'split'
-                    if pressed_buttons[0][1] == 4:
-                        x_mode = 'on_off'
-                    if pressed_buttons[0][1] == 5:
-                        x_mode = 'flip_on_off'
-                    if pressed_buttons[0][1] == 6:
-                        x_mode = 'split_on_off'
-                    if pressed_buttons[0][1] == 7:
-                        x_mode = 'none'
+                    x_mode = handle_select_mode(pressed_buttons)
+
                 if pressed_buttons[0][0] == 1:
-                    if pressed_buttons[0][1] == 1:
-                        y_mode = 'direct'
-                    if pressed_buttons[0][1] == 2:
-                        y_mode = 'flip'
-                    if pressed_buttons[0][1] == 3:
-                        y_mode = 'split'
-                    if pressed_buttons[0][1] == 4:
-                        y_mode = 'on_off'
-                    if pressed_buttons[0][1] == 5:
-                        y_mode = 'flip_on_off'
-                    if pressed_buttons[0][1] == 6:
-                        y_mode = 'split_on_off'
-                    if pressed_buttons[0][1] == 7:
-                        y_mode = 'none'
+                    y_mode = handle_select_mode(pressed_buttons)
+
                 if pressed_buttons[0][0] == 0:
-                    if pressed_buttons[0][1] == 1:
-                        z_mode = 'direct'
-                    if pressed_buttons[0][1] == 2:
-                        z_mode = 'flip'
-                    if pressed_buttons[0][1] == 3:
-                        z_mode = 'split'
-                    if pressed_buttons[0][1] == 4:
-                        z_mode = 'on_off'
-                    if pressed_buttons[0][1] == 5:
-                        z_mode = 'flip_on_off'
-                    if pressed_buttons[0][1] == 6:
-                        z_mode = 'split_on_off'
-                    if pressed_buttons[0][1] == 7:
-                        z_mode = 'none'
-                else:
-                    print(pressed_buttons)
+                    z_mode = handle_select_mode(pressed_buttons)
             
             """
-            Shift Combos
+            Edit CC Combos
             """
             if len(pressed_buttons) > 2:
                 if pressed_buttons == BACK_COMBO:
@@ -484,7 +467,7 @@ while True:
     last_press = pressed_buttons
     
     """
-    Axis CC Modes
+    Axis CC Send
     """
     if on:
         handle_axis(x_mode, accelerometer.acceleration[1], x_up_cc, x_down_cc)
