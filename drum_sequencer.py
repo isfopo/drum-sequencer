@@ -76,11 +76,10 @@ class Note:
 NOTE_ON            = (0, 63, 63)
 NOTE_OFF           = (0, 0, 0)
 COLUMN_COLOR       = (255, 0, 50)
-ACCENT             = (0, 191, 225)
+ACCENT             = (63, 191, 225)
 SHIFT_NOTE_ON      = (63, 63, 0)
-SHIFT_NOTE_OFF     = (0, 0, 0)
 SHIFT_COLUMN_COLOR = (50, 0, 255)
-SHIFT_ACCENT       = (255, 255, 0)
+SHIFT_ACCENT       = (255, 191, 63)
 CC_MODE_COLOR      = (255, 191, 191)
 
 CORRECT_INDEX  =  [ 24, 16,  8, 0,
@@ -337,13 +336,14 @@ while True:
                         
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
-                    trellis.pixels._neopixel[held_note.index] = SHIFT_NOTE_ON
+                    trellis.pixels._neopixel[held_note.index] = SHIFT_NOTE_ON if not held_note.isOn else NOTE_OFF
                     held_note.toggle()
                     if held_note.isAccented:
                         held_note.toggle_accent()
                     button_is_held = False
                 else:
                     if not held_note.isOn:
+                        trellis.pixels._neopixel[held_note.index] = SHIFT_ACCENT if not held_note.isAccented else NOTE_OFF
                         held_note.toggle()
                     held_note.toggle_accent()
             if not pressed_buttons:
