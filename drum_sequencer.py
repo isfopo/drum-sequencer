@@ -18,6 +18,17 @@ trellis = adafruit_trellism4.TrellisM4Express(rotation=90)
 i2c = busio.I2C(board.ACCELEROMETER_SCL, board.ACCELEROMETER_SDA)
 accelerometer = adafruit_adxl34x.ADXL345(i2c)
 
+class Grid: # a grid for on/off cells - use for editing modes
+    def __init__(self, columns, rows, correction):
+            index = 0
+            self.grid = []
+            for i in range(columns):
+                column = []
+                for j in range(rows):
+                    column.append(Cell(correction[index]))
+                    index += 1
+                self.grid.append(column)
+
 class NoteGrid:
     def __init__(self, columns, rows, starting_note, correction):
             index = 0
@@ -30,6 +41,14 @@ class NoteGrid:
                     index += 1
                     note += 1
                 self.grid.append(column)
+
+class Cell:
+    def __init__(self, index):
+        self.index = index
+        self.isOn = False
+        
+    def toggle(self):
+        self.isOn = True if not self.isOn else False
 
 class Note:
     def __init__(self, note, index):
@@ -62,6 +81,7 @@ SHIFT_NOTE_ON      = (63, 63, 0)
 SHIFT_NOTE_OFF     = (0, 0, 0)
 SHIFT_COLUMN_COLOR = (50, 0, 255)
 SHIFT_ACCENT       = (255, 255, 0)
+CC_MODE_COLOR      = (255, 191, 191)
 
 CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     25, 17,  9, 1,
@@ -81,14 +101,16 @@ NUMBER_OF_ROWS    = 4
 BACK_COMBO     = [(3, 0), (0, 0), (3, 7)]
 CLEAR_COMBO    = [(3, 0), (0, 0), (3, 1)]
 SHIFT_COMBO    = [(3, 0), (0, 0), (3, 2)]
+EDIT_CC_COMBO  = [(3, 0), (0, 0), (3, 3)]
 TOGGLE_X_COMBO = [(2, 0), (0, 0), (2, 1)]
 TOGGLE_Y_COMBO = [(2, 0), (0, 0), (2, 2)]
 TOGGLE_Z_COMBO = [(2, 0), (0, 0), (2, 3)]
 
 notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
 shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
+cc_edit = Grid(8, 4, CORRECT_INDEX)
 
-#print(list(map(lambda x: list(map(lambda y: y.index, x)), shift.grid))) # prints note grid to show notes
+print(list(map(lambda x: list(map(lambda y: y.index, x)), cc_edit.grid))) # prints note grid to show notes
 
 def reset_colors(notes, note_on, note_off):
     for column in notes.grid:
