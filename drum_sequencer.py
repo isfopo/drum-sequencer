@@ -78,9 +78,12 @@ NUMBER_OF_COLUMNS = 8
 NUMBER_OF_ROWS    = 4
 
 #button combonations
-BACK_COMBO  = [(3, 0), (0, 0), (3, 7)]
-CLEAR_COMBO = [(3, 0), (0, 0), (3, 1)]
-SHIFT_COMBO = [(3, 0), (0, 0), (3, 2)]
+BACK_COMBO     = [(3, 0), (0, 0), (3, 7)]
+CLEAR_COMBO    = [(3, 0), (0, 0), (3, 1)]
+SHIFT_COMBO    = [(3, 0), (0, 0), (3, 2)]
+TOGGLE_X_COMBO = [(2, 0), (0, 0), (2, 1)]
+TOGGLE_Y_COMBO = [(2, 0), (0, 0), (2, 2)]
+TOGGLE_Z_COMBO = [(2, 0), (0, 0), (2, 3)]
 
 notes = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
 shift = Grid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
@@ -239,17 +242,23 @@ while True:
                 combo_pressed = False
             
             if len(pressed_buttons) > 2:
-                print(pressed_buttons) # 3 button combos will help against accidental combos
                 combo_pressed = True
                 if pressed_buttons == CLEAR_COMBO:
                     clear_grid(notes)
+                    clear_grid(shift)
                     reset_colors(notes, NOTE_ON, NOTE_OFF)
-                if pressed_buttons == SHIFT_COMBO:
+                elif pressed_buttons == SHIFT_COMBO:
                     main_mode = False
                     shift_mode = True
                     reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF)
+                elif pressed_buttons == TOGGLE_X_COMBO:
+                    send_x = True if not send_x else False
+                elif pressed_buttons == TOGGLE_Y_COMBO:
+                    send_y = True if not send_y else False
+                elif pressed_buttons == TOGGLE_Z_COMBO:
+                    send_z = True if not send_z else False
                 else:
-                    main_mode = False
+                    print(pressed_buttons)
                 button_is_held = False
         
         elif shift_mode:
@@ -280,8 +289,12 @@ while True:
                     main_mode = True
                     shift_mode = False
                     reset_colors(notes, NOTE_ON, NOTE_OFF)
+                elif pressed_buttons == CLEAR_COMBO:
+                    clear_grid(notes)
+                    clear_grid(shift)
+                    reset_colors(notes, NOTE_ON, NOTE_OFF)
                 else:
-                    main_mode = False
+                    print(pressed_buttons)
                 button_is_held = False
         
         else:
