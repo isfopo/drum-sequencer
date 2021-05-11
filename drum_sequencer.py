@@ -37,7 +37,10 @@ class NoteGrid:
                 column = []
                 note = starting_note
                 for j in range(rows):
-                    column.append(Note(note, correction[index]))
+                    
+                    if j % 4 == 0:
+                        index = 0
+                    column.append(Note(note, correction[index + (i*4)]))
                     index += 1
                     note += 1
                 self.grid.append(column)
@@ -100,7 +103,7 @@ CORRECT_INDEX  =  [ 24, 16,  8, 0,
 # note grid parameters
 STARTING_NOTE     = 36
 NUMBER_OF_COLUMNS = 8
-NUMBER_OF_ROWS    = 4
+NUMBER_OF_ROWS    = 16
 
 #button combonations
 BACK_COMBO        = [(3, 0), (0, 0), (3, 7)]
@@ -118,7 +121,7 @@ notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX
 shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, CORRECT_INDEX)
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 
-print(list(map(lambda x: list(map(lambda y: y.index, x)), cc_edit.grid))) # prints note grid to show notes
+print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
 
 def reset_colors(notes, note_on, note_off):
     for column in notes.grid:
