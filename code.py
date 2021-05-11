@@ -26,7 +26,7 @@ class Grid: # a grid for on/off cells - use for editing modes
     def __init__(self, columns, rows, correction):
             index = 0
             self.grid = []
-            for i in range(columns):
+            for i in range(columns): #TODO update this to handle more columns and rows
                 column = []
                 for j in range(rows):
                     column.append(Cell(correction[index]))
@@ -87,7 +87,7 @@ class Note:
 """
 Functions
 """
-def reset_colors(notes, note_on, note_off, row_offset, column_offset): #BUG not resetting when shifting up and down rows
+def reset_colors(notes, note_on, note_off=(0, 0, 0), row_offset=0, column_offset=0):
     for column in notes.grid[column_offset:column_offset+8]:
         for note in column[row_offset:row_offset+4]:
             if note.isOn == True:
@@ -162,6 +162,17 @@ def handle_axis(mode, axis, up_cc, down_cc):
             else:
                 midi.send(ControlChange(down_cc, 0))
 
+def handle_cc_grid(cc_edit, modes, offset):
+    for mode in modes:
+        if mode == 'direct':       cc_edit.grid[1][offset].isOn = True
+        if mode == 'flip':         cc_edit.grid[2][offset].isOn = True
+        if mode == 'split':        cc_edit.grid[3][offset].isOn = True
+        if mode == 'on_off':       cc_edit.grid[4][offset].isOn = True
+        if mode == 'flip_on_off':  cc_edit.grid[5][offset].isOn = True
+        if mode == 'split_on_off': cc_edit.grid[6][offset].isOn = True
+        if mode == 'none':         cc_edit.grid[7][offset].isOn = True
+        offset -= 1
+
 def handle_select_mode(pressed_buttons):
     if pressed_buttons[0][1] == 1: return 'direct'
     if pressed_buttons[0][1] == 2: return 'flip'
@@ -170,7 +181,10 @@ def handle_select_mode(pressed_buttons):
     if pressed_buttons[0][1] == 5: return 'flip_on_off'
     if pressed_buttons[0][1] == 6: return 'split_on_off'
     else: return 'none'
-    
+
+def handle_cc_lights(pressed_buttons, cc_edit, row):
+    cc_edit.grid[pressed_buttons[0][1]][row].isOn = True
+
 def increase_row_offset(row_offset):
     new_offset = row_offset + 4
     return new_offset if new_offset < NUMBER_OF_ROWS else row_offset
@@ -183,6 +197,10 @@ def decrease_row_offset(row_offset):
     
 #def decrease_column_offset():
    
+def row_off(grid, row):   
+    for column in grid.grid:
+        column[row].isOn = False
+        
 """
 ======== Constants ========
 """
@@ -198,18 +216,6 @@ SHIFT_NOTE_ON      = (63, 63, 0)
 SHIFT_COLUMN_COLOR = (50, 0, 255)
 SHIFT_ACCENT       = (255, 191, 63)
 EDIT_CC_COLOR      = (255, 191, 191)
-
-"""
-Sets
-"""
-CORRECT_INDEX  =  [ 24, 16,  8, 0,
-                    25, 17,  9, 1,
-                    26, 18, 10, 2,
-                    27, 19, 11, 3,
-                    28, 20, 12, 4,
-                    29, 21, 13, 5,
-                    30, 22, 14, 6,
-                    31, 23, 15, 7 ]
 
 """
 Grid Parameters
@@ -238,7 +244,24 @@ INCREASE_ROW_OFFSET_COMBO    = [(3, 3), (2, 3), (0, 3)]
 DECREASE_ROW_OFFSET_COMBO    = [(2, 3), (1, 3), (0, 3)]
 INCREASE_COLUMN_OFFSET_COMBO = [(2, 3), (0, 3), (2, 4)]
 DECREASE_COLUMN_OFFSET_COMBO = [(2, 2), (2, 3), (0, 3)]
+
+"""
+Integers
+"""
 HOLD_TIME = 48 #in ticks
+
+"""
+Sets
+"""
+CORRECT_INDEX  =  [ 24, 16,  8, 0,
+                    25, 17,  9, 1,
+                    26, 18, 10, 2,
+                    27, 19, 11, 3,
+                    28, 20, 12, 4,
+                    29, 21, 13, 5,
+                    30, 22, 14, 6,
+                    31, 23, 15, 7 ]
+
 
 """
 ======== Global Variables ========
@@ -291,7 +314,7 @@ manual_cc_mode = False
 """
 Axis Modes
 """
-x_mode = 'split_on_off'
+x_mode = 'none'
 y_mode = 'none'
 z_mode = 'none'
 
@@ -516,16 +539,28 @@ while True:
             Edit CC Mode
             """
         elif edit_cc_mode:
+            handle_cc_grid(cc_edit, [x_mode, y_mode, z_mode], 2)
+            reset_colors(cc_edit, EDIT_CC_COLOR)
+            
             if pressed_buttons and not combo_pressed:
  
                 if pressed_buttons[0][0] == 2:
                     x_mode = handle_select_mode(pressed_buttons)
+                    row_off(cc_edit, 2)
+                    handle_cc_lights(pressed_buttons, cc_edit, 2)
+                    reset_colors(cc_edit, EDIT_CC_COLOR)
 
                 if pressed_buttons[0][0] == 1:
                     y_mode = handle_select_mode(pressed_buttons)
-
+                    row_off(cc_edit, 1)
+                    handle_cc_lights(pressed_buttons, cc_edit, 1)
+                    reset_colors(cc_edit, EDIT_CC_COLOR)
+                    
                 if pressed_buttons[0][0] == 0:
                     z_mode = handle_select_mode(pressed_buttons)
+                    row_off(cc_edit, 0)
+                    handle_cc_lights(pressed_buttons, cc_edit, 0)
+                    reset_colors(cc_edit, EDIT_CC_COLOR)
             
             """
             Edit CC Combos
