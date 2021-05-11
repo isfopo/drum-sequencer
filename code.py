@@ -464,7 +464,7 @@ while True:
         elif shift_mode:
             if pressed_buttons and not combo_pressed:
                 for note in shift.grid[pressed_buttons[0][1]]:
-                    if note.note == pressed_buttons[0][0] + STARTING_NOTE:
+                    if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
                         tick_placeholder = ticks
                         held_note = note
                         button_is_held = True
@@ -493,12 +493,23 @@ while True:
                     main_mode = True
                     shift_mode = False
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    
                 elif pressed_buttons == CLEAR_COMBO:
                     clear_grid(notes)
                     clear_grid(shift)
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                
+                elif pressed_buttons == INCREASE_ROW_OFFSET_COMBO:
+                    row_offset = increase_row_offset(row_offset)
+                    reset_colors(shift, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    
+                elif pressed_buttons == DECREASE_ROW_OFFSET_COMBO:
+                    row_offset = decrease_row_offset(row_offset)
+                    reset_colors(shift, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    
                 else:
                     print(pressed_buttons)
+                    
                 button_is_held = False
     
             """
