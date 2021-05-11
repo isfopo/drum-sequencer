@@ -22,14 +22,16 @@ accelerometer = adafruit_adxl34x.ADXL345(i2c)
 Classes
 """
 
-class Grid: # a grid for on/off cells - use for editing modes
+class Grid:
     def __init__(self, columns, rows, correction):
             index = 0
             self.grid = []
-            for i in range(columns): #TODO update this to handle more columns and rows
+            for i in range(columns):
                 column = []
                 for j in range(rows):
-                    column.append(Cell(correction[index]))
+                    if j % 4 == 0:
+                        index = 0
+                    column.append(Cell(correct_index(index, i)))
                     index += 1
                 self.grid.append(column)
 
@@ -274,7 +276,7 @@ notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
 shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 
-print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
+print(list(map(lambda x: list(map(lambda y: y.index, x)), cc_edit.grid))) # prints note grid to show notes
 
 """
 Counters
