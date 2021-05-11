@@ -170,8 +170,14 @@ def handle_select_mode(pressed_buttons):
     if pressed_buttons[0][1] == 5: return 'flip_on_off'
     if pressed_buttons[0][1] == 6: return 'split_on_off'
     else: return 'none'
-        
-#colors
+   
+"""
+======== Constants ========
+"""
+
+"""
+Colors
+"""
 NOTE_ON            = (0, 63, 63)
 NOTE_OFF           = (0, 0, 0)
 COLUMN_COLOR       = (255, 0, 50)
@@ -181,6 +187,9 @@ SHIFT_COLUMN_COLOR = (50, 0, 255)
 SHIFT_ACCENT       = (255, 191, 63)
 EDIT_CC_COLOR      = (255, 191, 191)
 
+"""
+Sets
+"""
 CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     25, 17,  9, 1,
                     26, 18, 10, 2,
@@ -190,12 +199,16 @@ CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     30, 22, 14, 6,
                     31, 23, 15, 7 ]
 
-# note grid parameters
+"""
+Grid Parameters
+"""
 STARTING_NOTE     = 36
 NUMBER_OF_COLUMNS = 16
 NUMBER_OF_ROWS    = 8
 
-#button combonations
+"""
+Button Combonations
+"""
 BACK_COMBO        = [(3, 0), (0, 0), (3, 7)]
 CLEAR_COMBO       = [(3, 0), (0, 0), (3, 1)]
 SHIFT_COMBO       = [(3, 0), (0, 0), (3, 2)]
@@ -207,50 +220,66 @@ TOGGLE_X_COMBO    = [(2, 0), (0, 0), (2, 1)]
 TOGGLE_Y_COMBO    = [(2, 0), (0, 0), (2, 2)]
 TOGGLE_Z_COMBO    = [(2, 0), (0, 0), (2, 3)]
 
+HOLD_TIME = 48 #in ticks
+
+"""
+======== Global Variables ========
+"""
+
+"""
+Grid Objects
+"""
 notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
 shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 
 print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
 
-#sync counters
+"""
+Counters
+"""
 ticks = 0
 eighth_note = 0
 shift_note = 0
 bars = 0
 
-#message placeholders
+"""
+Placeholders
+"""
 old_message = 0
 last_press = 0
-on = False
-
 held_note = 0
 tick_placeholder = 0
-HOLD_TIME = 48 #in ticks
+
+on = False
 button_is_held = False
 combo_pressed = False
 
-#modes
+"""
+Modes
+"""
 main_mode = True
 shift_mode = False
 cc_edit_mode = False
 manual_note_mode = False
 manual_cc_mode = False
 
-#axis modes
+"""
+Axis Modes
+"""
 x_mode = 'split_on_off'
 y_mode = 'none'
 z_mode = 'none'
 
-#axis cc's
+"""
+Axis cc's
+"""
 x_up_cc = 14
 x_down_cc = 15
 y_up_cc = 23 #TODO make sure these are unused
 y_down_cc = 24
 z_up_cc = 25
 z_down_cc = 26
-
-x_switch = False
 
 while True:
     
