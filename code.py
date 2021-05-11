@@ -195,9 +195,13 @@ def decrease_row_offset(row_offset):
     new_offset = row_offset - 4
     return new_offset if new_offset >= 0 else row_offset
  
-#def increase_column_offset():
+def increase_column_offset(column_offset):
+    new_offset = column_offset + 8
+    return new_offset if new_offset < NUMBER_OF_ROWS else column_offset
     
-#def decrease_column_offset():
+def decrease_column_offset(column_offset):
+    new_offset = column_offset - 8
+    return new_offset if new_offset >= 0 else column_offset
    
 def row_off(grid, row):   
     for column in grid.grid:
@@ -356,17 +360,16 @@ while True:
                     if eighth_note % NUMBER_OF_COLUMNS == i:
                         if i == 1:
                             bars += 1
-                        if i == 0:
+                        if i % 8 == 0:
                             if main_mode:
-                                if column_offset < i and i < column_offset + 8:
-                                    light_column(notes, NUMBER_OF_COLUMNS - 1, COLUMN_COLOR)
-                                reset_column(notes, row_offset, NUMBER_OF_COLUMNS - 2, NOTE_ON, NOTE_OFF, ACCENT)
+                                light_column(notes, (NUMBER_OF_COLUMNS%8)-1, COLUMN_COLOR)
+                                reset_column(notes, row_offset, (NUMBER_OF_COLUMNS%8)-2, NOTE_ON, NOTE_OFF, ACCENT)
                             play_column(notes, 7)
                         else:
                             if main_mode:
                                 if column_offset < i and i < column_offset + 8:
                                     light_column(notes, (i-1)%8, COLUMN_COLOR)
-                                reset_column(notes, row_offset, (i-2)%8, NOTE_ON, NOTE_OFF, ACCENT)
+                                    reset_column(notes, row_offset, (i-2)%8, NOTE_ON, NOTE_OFF, ACCENT)
                             play_column(notes, i-1)
                             
             """
@@ -477,6 +480,15 @@ while True:
                     row_offset = decrease_row_offset(row_offset)
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
+                elif pressed_buttons == INCREASE_COLUMN_OFFSET_COMBO:
+                    column_offset = increase_column_offset(column_offset)
+                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    
+                elif pressed_buttons == DECREASE_COLUMN_OFFSET_COMBO:
+                    column_offset = decrease_column_offset(column_offset)
+                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    
+                  
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     if len(pressed_buttons) > 2:
                         print(pressed_buttons[0])
