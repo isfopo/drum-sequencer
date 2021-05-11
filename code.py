@@ -87,7 +87,7 @@ class Note:
 """
 Functions
 """
-def reset_colors(notes, note_on, note_off):
+def reset_colors(notes, note_on, note_off): #BUG not resetting when shifting up and down rows
     for column in notes.grid:
         for note in column:
             if note.isOn == True:
@@ -96,11 +96,11 @@ def reset_colors(notes, note_on, note_off):
                 trellis.pixels._neopixel[note.index] = note_off
 
 def light_column(notes, column, column_color):
-    for i in range(len(notes.grid[0])):
-        trellis.pixels._neopixel[ column + (i*8) ] = column_color
+    for i in range(ROWS_ON_BOARD):
+        trellis.pixels._neopixel[ column + (i*len(trellis._matrix.row_pins)) ] = column_color
     
-def reset_column(notes, column, note_on, note_off, accent):
-    for note in notes.grid[column]:
+def reset_column(notes, offset, column, note_on, note_off, accent):
+    for note in notes.grid[column][offset:offset+4]:
         if note.isOn:
             if note.isAccented:
                 trellis.pixels._neopixel[note.index] = accent
@@ -170,6 +170,18 @@ def handle_select_mode(pressed_buttons):
     if pressed_buttons[0][1] == 5: return 'flip_on_off'
     if pressed_buttons[0][1] == 6: return 'split_on_off'
     else: return 'none'
+    
+def increase_row_offset(row_offset):
+    new_offset = row_offset + 4
+    return new_offset if new_offset < NUMBER_OF_ROWS else row_offset
+    
+def decrease_row_offset(row_offset):
+    new_offset = row_offset - 4
+    return new_offset if new_offset > 0 else row_offset
+ 
+#def increase_column_offset():
+    
+#def decrease_column_offset():
    
 """
 ======== Constants ========
@@ -203,8 +215,11 @@ CORRECT_INDEX  =  [ 24, 16,  8, 0,
 Grid Parameters
 """
 STARTING_NOTE     = 36
-NUMBER_OF_COLUMNS = 16
+NUMBER_OF_COLUMNS = 8
 NUMBER_OF_ROWS    = 8
+COLUMNS_ON_BOARD  = len(trellis._matrix.row_pins)
+ROWS_ON_BOARD     = len(trellis._matrix.col_pins)
+
 
 """
 Button Combonations
@@ -219,7 +234,8 @@ MANUAL_NOTE_COMBO = [(3, 4), (0, 5)]
 TOGGLE_X_COMBO    = [(2, 0), (0, 0), (2, 1)]
 TOGGLE_Y_COMBO    = [(2, 0), (0, 0), (2, 2)]
 TOGGLE_Z_COMBO    = [(2, 0), (0, 0), (2, 3)]
-
+INCREASE_ROW_OFFSET_COMBO = [(3, 3), (2, 3), (0, 3)]
+DECREASE_ROW_OFFSET_COMBO = [(2, 3), (1, 3), (0, 3)]
 HOLD_TIME = 48 #in ticks
 
 """
@@ -254,6 +270,12 @@ tick_placeholder = 0
 on = False
 button_is_held = False
 combo_pressed = False
+
+"""
+Offset
+"""
+row_offset = 0
+column_offset = 0
 
 """
 Modes
@@ -307,12 +329,12 @@ while True:
                         if i == 0:
                             if main_mode:
                                 light_column(notes, 7, COLUMN_COLOR)
-                                reset_column(notes, 6, NOTE_ON, NOTE_OFF, ACCENT)
+                                reset_column(notes, row_offset, 6, NOTE_ON, NOTE_OFF, ACCENT)
                             play_column(notes, 7)
                         else:
                             if main_mode:
                                 light_column(notes, i-1, COLUMN_COLOR)
-                                reset_column(notes, i-2, NOTE_ON, NOTE_OFF, ACCENT)
+                                reset_column(notes, row_offset, i-2, NOTE_ON, NOTE_OFF, ACCENT)
                             play_column(notes, i-1)
                             
             """
@@ -328,12 +350,12 @@ while True:
                         if i == 0:
                             if shift_mode:
                                 light_column(shift, 7, SHIFT_COLUMN_COLOR)
-                                reset_column(shift, 6, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
+                                reset_column(shift, row_offset, 6, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
                             play_column(shift, 7)
                         else:
                             if shift_mode:
                                 light_column(shift, i-1, SHIFT_COLUMN_COLOR)
-                                reset_column(shift, i-2, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
+                                reset_column(shift, row_offset, i-2, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
                             play_column(shift, i-1)
             ticks += 1
             
@@ -366,7 +388,7 @@ while True:
         if main_mode:
             if pressed_buttons and not combo_pressed:
                 for note in notes.grid[pressed_buttons[0][1]]:
-                    if note.note == pressed_buttons[0][0] + STARTING_NOTE:
+                    if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
                         tick_placeholder = ticks
                         held_note = note
                         button_is_held = True
@@ -414,7 +436,13 @@ while True:
                     main_mode = False
                     edit_cc_mode = True
                     reset_colors(cc_edit, EDIT_CC_COLOR, NOTE_OFF)
-                
+                    
+                elif pressed_buttons == INCREASE_ROW_OFFSET_COMBO:
+                    row_offset = increase_row_offset(row_offset)
+                    
+                elif pressed_buttons == DECREASE_ROW_OFFSET_COMBO:
+                    row_offset = decrease_row_offset(row_offset)
+                    
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     if len(pressed_buttons) > 2:
                         print(pressed_buttons[0])
