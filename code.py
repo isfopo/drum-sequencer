@@ -19,7 +19,7 @@ i2c = busio.I2C(board.ACCELEROMETER_SCL, board.ACCELEROMETER_SDA)
 accelerometer = adafruit_adxl34x.ADXL345(i2c)
 
 """
-Classes
+======== Classes ========
 """
 
 class Grid:
@@ -87,7 +87,7 @@ class Note:
         self.isAccented = True if not self.isAccented else False
 
 """
-Functions
+======== Fuctions ========
 """
 def reset_colors(notes, note_on, note_off=(0, 0, 0), row_offset=0, column_offset=0):
     for column in notes.grid[column_offset:column_offset+8]:
@@ -223,8 +223,8 @@ EDIT_CC_COLOR      = (255, 191, 191)
 Grid Parameters
 """
 STARTING_NOTE     = 36
-NUMBER_OF_COLUMNS = 8
-NUMBER_OF_ROWS    = 8
+NUMBER_OF_COLUMNS = 16
+NUMBER_OF_ROWS    = 16
 COLUMNS_ON_BOARD  = len(trellis._matrix.row_pins)
 ROWS_ON_BOARD     = len(trellis._matrix.col_pins)
 
@@ -232,16 +232,16 @@ ROWS_ON_BOARD     = len(trellis._matrix.col_pins)
 """
 Button Combonations
 """
-BACK_COMBO        = [(3, 0), (0, 0), (3, 7)]
-CLEAR_COMBO       = [(3, 0), (0, 0), (3, 1)]
-SHIFT_COMBO       = [(3, 0), (0, 0), (3, 2)]
-EDIT_CC_COMBO     = [(3, 0), (0, 0), (3, 3)]
-EDIT_CC_BACK      = [(3, 0), (3, 1), (3, 7)]
-MANUAL_CC_COMBO   = [(3, 4), (0, 4)]
-MANUAL_NOTE_COMBO = [(3, 4), (0, 5)]
-TOGGLE_X_COMBO    = [(2, 0), (0, 0), (2, 1)]
-TOGGLE_Y_COMBO    = [(2, 0), (0, 0), (2, 2)]
-TOGGLE_Z_COMBO    = [(2, 0), (0, 0), (2, 3)]
+MANUAL_CC_COMBO              = [(3, 4), (0, 4)]
+MANUAL_NOTE_COMBO            = [(3, 4), (0, 5)]
+BACK_COMBO                   = [(3, 0), (0, 0), (3, 7)]
+CLEAR_COMBO                  = [(3, 0), (0, 0), (3, 1)]
+SHIFT_COMBO                  = [(3, 0), (0, 0), (3, 2)]
+EDIT_CC_COMBO                = [(3, 0), (0, 0), (3, 3)]
+EDIT_CC_BACK                 = [(3, 0), (3, 1), (3, 7)]
+TOGGLE_X_COMBO               = [(2, 0), (0, 0), (2, 1)]
+TOGGLE_Y_COMBO               = [(2, 0), (0, 0), (2, 2)]
+TOGGLE_Z_COMBO               = [(2, 0), (0, 0), (2, 3)]
 INCREASE_ROW_OFFSET_COMBO    = [(3, 3), (2, 3), (0, 3)]
 DECREASE_ROW_OFFSET_COMBO    = [(2, 3), (1, 3), (0, 3)]
 INCREASE_COLUMN_OFFSET_COMBO = [(2, 3), (0, 3), (2, 4)]
@@ -276,7 +276,7 @@ notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
 shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 
-print(list(map(lambda x: list(map(lambda y: y.index, x)), cc_edit.grid))) # prints note grid to show notes
+print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
 
 """
 Counters
@@ -302,7 +302,7 @@ combo_pressed = False
 Offset
 """
 row_offset = 0
-column_offset = 0
+column_offset = 8
 
 """
 Modes
@@ -333,9 +333,12 @@ z_down_cc = 26
 while True:
     
     """
-    Receive MIDI
+    ======== Play Sequence ========
     """
     
+    """
+    Receive MIDI
+    """
     new_message = midi.receive()
     if new_message != old_message and new_message != None:
 
@@ -355,13 +358,15 @@ while True:
                             bars += 1
                         if i == 0:
                             if main_mode:
-                                light_column(notes, 7, COLUMN_COLOR)
-                                reset_column(notes, row_offset, 6, NOTE_ON, NOTE_OFF, ACCENT)
+                                if column_offset < i and i < column_offset + 8:
+                                    light_column(notes, NUMBER_OF_COLUMNS - 1, COLUMN_COLOR)
+                                reset_column(notes, row_offset, NUMBER_OF_COLUMNS - 2, NOTE_ON, NOTE_OFF, ACCENT)
                             play_column(notes, 7)
                         else:
                             if main_mode:
-                                light_column(notes, i-1, COLUMN_COLOR)
-                                reset_column(notes, row_offset, i-2, NOTE_ON, NOTE_OFF, ACCENT)
+                                if column_offset < i and i < column_offset + 8:
+                                    light_column(notes, (i-1)%8, COLUMN_COLOR)
+                                reset_column(notes, row_offset, (i-2)%8, NOTE_ON, NOTE_OFF, ACCENT)
                             play_column(notes, i-1)
                             
             """
@@ -375,14 +380,14 @@ while True:
                         if i == 1:
                             bars += 1
                         if i == 0:
-                            if shift_mode:
-                                light_column(shift, 7, SHIFT_COLUMN_COLOR)
-                                reset_column(shift, row_offset, 6, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
+                            #if shift_mode:
+                                #light_column(shift, 7, SHIFT_COLUMN_COLOR)
+                                #reset_column(shift, row_offset, 6, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
                             play_column(shift, 7)
                         else:
-                            if shift_mode:
-                                light_column(shift, i-1, SHIFT_COLUMN_COLOR)
-                                reset_column(shift, row_offset, i-2, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
+                            #if shift_mode:
+                                #light_column(shift, i-1, SHIFT_COLUMN_COLOR)
+                                #reset_column(shift, row_offset, i-2, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
                             play_column(shift, i-1)
             ticks += 1
             
@@ -403,7 +408,7 @@ while True:
     old_message = new_message
     
     """
-    Read Buttons
+    ======== Read Buttons ========
     """
     
     pressed_buttons = trellis.pressed_keys
@@ -414,7 +419,7 @@ while True:
         """
         if main_mode:
             if pressed_buttons and not combo_pressed:
-                for note in notes.grid[pressed_buttons[0][1]]:
+                for note in notes.grid[pressed_buttons[0][1] + column_offset]:
                     if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
                         tick_placeholder = ticks
                         held_note = note
@@ -488,7 +493,7 @@ while True:
             """
         elif shift_mode:
             if pressed_buttons and not combo_pressed:
-                for note in shift.grid[pressed_buttons[0][1]]:
+                for note in shift.grid[pressed_buttons[0][1] + column_offset]:
                     if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
                         tick_placeholder = ticks
                         held_note = note
@@ -578,9 +583,9 @@ while True:
                 combo_pressed = False
             
     last_press = pressed_buttons
-    
+
     """
-    Axis CC Send
+    ======== Send Axis CC ========
     """
     if on:
         handle_axis(x_mode, accelerometer.acceleration[1], x_up_cc, x_down_cc)
