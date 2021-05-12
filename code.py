@@ -133,6 +133,9 @@ def scale(val, src, dst):
 def correct_index(index, i):
     return CORRECT_INDEX[index+((i%8)*4)]
 
+def press_to_light(button):
+    return PRESS_TO_LIGHT[button[0]][button[1]]
+
 def handle_axis(mode, axis, up_cc, down_cc):
     if mode == 'direct':
         midi.send(ControlChange(up_cc, int(scale(axis, (-10, 10), (0, 127)))))
@@ -215,14 +218,16 @@ def row_off(grid, row):
 """
 Colors
 """
-NOTE_ON            = (0, 63, 63)
-NOTE_OFF           = (0, 0, 0)
-COLUMN_COLOR       = (255, 0, 50)
-ACCENT             = (63, 191, 225)
-SHIFT_NOTE_ON      = (63, 63, 0)
-SHIFT_COLUMN_COLOR = (50, 0, 255)
-SHIFT_ACCENT       = (255, 191, 63)
-EDIT_CC_COLOR      = (255, 191, 191)
+NOTE_ON            = (   0,  63,  63 )
+NOTE_OFF           = (   0,   0,   0 )
+COLUMN_COLOR       = ( 255,   0,  50 )
+ACCENT             = (  63, 191, 225 )
+SHIFT_NOTE_ON      = (  63,  63,   0 )
+SHIFT_COLUMN_COLOR = (  50,   0, 255 )
+SHIFT_ACCENT       = ( 255, 191,  63 )
+EDIT_CC_COLOR      = ( 255, 191, 191 )
+MANUAL_NOTE_COLOR  = (   0, 255,   0 )
+MANUAL_CC_COLOR    = (   0, 255, 191 )
 
 """
 Grid Parameters
@@ -268,6 +273,11 @@ CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     29, 21, 13, 5,
                     30, 22, 14, 6,
                     31, 23, 15, 7 ]
+
+PRESS_TO_LIGHT    = [ [ 24, 25, 26, 27, 28, 29, 30, 31 ],
+                      [ 16, 17, 18, 19, 20, 21, 22, 23 ],
+                      [  8,  9, 10, 11, 12, 13, 14, 15 ],
+                      [  0,  1,  2,  3,  4,  5,  6,  7 ] ]
 
 MANUAL_NOTES      = [ [ 48, 44, 40, 36 ],
                       [ 49, 45, 41, 37 ],
@@ -522,25 +532,27 @@ while True:
                     if len(pressed_buttons) > 2:
                         print(pressed_buttons[0])
                     
-                elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO:
+                elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
                     if len(pressed_buttons) > 2:
                         manual_notes = []
                         for button in pressed_buttons:
+                            print(press_to_light(button))
                             if button == (3, 4) or button == (0, 5):
                                 pass
                             else:
-                                manual_notes.append(MANUAL_NOTES[button[0]][button[1]])
-                        for note in manual_notes:
-                            pass
+                                manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button))
                     else:
                         manual_notes = []
                     for note in manual_notes:
                         if note not in prev_manual_notes:
-                            midi.send(NoteOn(note, 127))
+                            midi.send(NoteOn(note[0], 127))
+                            trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
-                            midi.send(NoteOff(note, 0))
+                            midi.send(NoteOff(note[0], 0))
+                            trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
+                    
                 else:
                     print(pressed_buttons)
                 button_is_held = False
