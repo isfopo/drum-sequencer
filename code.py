@@ -227,7 +227,7 @@ SHIFT_COLUMN_COLOR = (  50,   0, 255 )
 SHIFT_ACCENT       = ( 255, 191,  63 )
 EDIT_CC_COLOR      = ( 255, 191, 191 )
 MANUAL_NOTE_COLOR  = (   0, 255,   0 )
-MANUAL_CC_COLOR    = (   0, 255, 191 )
+MANUAL_CC_COLOR    = (   0, 255,  63 )
 
 """
 Grid Parameters
@@ -284,10 +284,9 @@ MANUAL_NOTES      = [ [ 48, 44, 40, 36 ],
                       [ 50, 46, 42, 38 ],
                       [ 51, 47, 43, 39 ] ]
 
-MANUAL_CC_TOGGLE  = [ [ 22, 23, 24, 25 ],
-                      [ 26, 27, 28, 29 ] ]
-
-MANUAL_CC_TRIGGER = [ [ 30, 31, 85, 86 ],
+MANUAL_CC         = [ [ 22, 23, 24, 25 ],
+                      [ 26, 27, 28, 29 ],
+                      [ 30, 31, 85, 86 ],
                       [ 87, 88, 89, 90 ] ]
 
 """
@@ -360,6 +359,8 @@ z_down_cc = 21
 
 manual_notes = []
 prev_manual_notes = []
+manual_cc = []
+prev_manual_cc = []
 
 while True:
     
@@ -521,7 +522,24 @@ while True:
                     
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     if len(pressed_buttons) > 2:
-                        print(pressed_buttons[0])
+                        manual_cc = []
+                        for button in pressed_buttons:
+                            if button == (3, 4) or button == (0, 4):
+                                pass
+                            else:
+                                manual_cc.append((MANUAL_CC[button[0]][button[1]], button))
+                    else:
+                        manual_cc = []
+                    for cc in manual_cc:
+                        if cc not in prev_manual_cc:
+                            print(cc)
+                            midi.send(ControlChange(cc[0], 127))
+                            trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                    for cc in prev_manual_cc:
+                        if cc not in manual_cc:
+                            midi.send(ControlChange(cc[0], 0))
+                            trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
+                    prev_manual_cc = manual_cc
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
                     if len(pressed_buttons) > 2:
