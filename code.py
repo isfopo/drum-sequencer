@@ -473,7 +473,7 @@ while True:
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
                     trellis.pixels._neopixel[held_note.index] = NOTE_ON if not held_note.isOn else NOTE_OFF
-                    held_note.toggle()
+                    held_note.toggle() #TODO somehting is slow here - there is a slight delay when a new note is added
                     if held_note.isAccented:
                         held_note.toggle_accent()
                     button_is_held = False
@@ -650,23 +650,23 @@ while True:
                 elif pressed_buttons == CLEAR_COMBO:
                     clear_grid(notes)
                     clear_grid(shift)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons == INCREASE_ROW_OFFSET_COMBO:
                     row_offset = increase_row_offset(row_offset)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons == DECREASE_ROW_OFFSET_COMBO:
                     row_offset = decrease_row_offset(row_offset)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons == INCREASE_COLUMN_OFFSET_COMBO:
                     column_offset = increase_column_offset(column_offset)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons == DECREASE_COLUMN_OFFSET_COMBO:
                     column_offset = decrease_column_offset(column_offset)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(shift, NOTE_ON, NOTE_OFF, row_offset, column_offset)
 
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
@@ -715,6 +715,36 @@ while True:
                         if note not in prev_manual_notes:
                             midi.send(NoteOn(note[0], 127))
                             trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR
+                    for note in prev_manual_notes:
+                        if note not in manual_notes:
+                            midi.send(NoteOff(note[0], 0))
+                            trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
+                    prev_manual_notes = manual_notes
+                
+                elif pressed_buttons[-2:] == RECORD_NOTE_COMBO: 
+                    if len(pressed_buttons) > 2:
+                        manual_notes = []
+                        for button in pressed_buttons:
+                            if button == (3, 5) or button == (0, 5):
+                                pass
+                            else:
+                                manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button))
+                    else:
+                        manual_notes = []
+                    for note in manual_notes:
+                        if note not in prev_manual_notes:
+                            column_now = ticks%(last_step*12)/6
+                            if round(column_now) % 2 == 0:
+                                for grid_note in notes.grid[floor(column_now/2)]:
+                                    if grid_note.note == note[0]:
+                                        grid_note.isOn = True
+                            else:
+                                for grid_note in shift.grid[floor(column_now/2)]:
+                                    if grid_note.note == note[0]:
+                                        grid_note.isOn = True
+                            if round(column_now) - column_now < 0:
+                                midi.send(NoteOn(note[0], 127))
+                            trellis.pixels._neopixel[press_to_light(note[1])] = RECORD_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0))
