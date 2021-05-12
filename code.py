@@ -497,15 +497,6 @@ while True:
                     main_mode = False
                     shift_mode = True
                     reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                    
-                elif pressed_buttons == TOGGLE_X_COMBO:
-                    send_x = True if not send_x else False
-                    
-                elif pressed_buttons == TOGGLE_Y_COMBO:
-                    send_y = True if not send_y else False
-                    
-                elif pressed_buttons == TOGGLE_Z_COMBO:
-                    send_z = True if not send_z else False
                 
                 elif pressed_buttons == EDIT_CC_COMBO:
                     main_mode = False
@@ -536,7 +527,6 @@ while True:
                     if len(pressed_buttons) > 2:
                         manual_notes = []
                         for button in pressed_buttons:
-                            print(press_to_light(button))
                             if button == (3, 4) or button == (0, 5):
                                 pass
                             else:
@@ -586,7 +576,7 @@ while True:
             """
             Shift Combos
             """
-            if len(pressed_buttons) > 2: #TODO include mode combos here as well
+            if len(pressed_buttons) > 1: #TODO include mode combos here as well
                 combo_pressed = True
                 if pressed_buttons == BACK_COMBO:
                     main_mode = True
@@ -613,6 +603,30 @@ while True:
                 elif pressed_buttons == DECREASE_COLUMN_OFFSET_COMBO:
                     column_offset = decrease_column_offset(column_offset)
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+
+                elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
+                    if len(pressed_buttons) > 2:
+                        print(pressed_buttons[0])
+                    
+                elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
+                    if len(pressed_buttons) > 2:
+                        manual_notes = []
+                        for button in pressed_buttons:
+                            if button == (3, 4) or button == (0, 5):
+                                pass
+                            else:
+                                manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button))
+                    else:
+                        manual_notes = []
+                    for note in manual_notes:
+                        if note not in prev_manual_notes:
+                            midi.send(NoteOn(note[0], 127))
+                            trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR
+                    for note in prev_manual_notes:
+                        if note not in manual_notes:
+                            midi.send(NoteOff(note[0], 0))
+                            trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
+                    prev_manual_notes = manual_notes
                     
                 else:
                     print(pressed_buttons)
