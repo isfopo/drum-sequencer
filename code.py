@@ -1,3 +1,4 @@
+from math import ceil
 import board
 import busio
 
@@ -330,7 +331,7 @@ Offset
 """
 row_offset = 0
 column_offset = 0
-last_step = 16
+last_step = 8
 
 """
 Modes
@@ -587,15 +588,15 @@ while True:
                         if note not in prev_manual_notes:
                             column_now = ticks%(last_step*12)/6
                             if round(column_now) % 2 == 0:
-                                for grid_note in notes.grid[int(column_now/2)+1]:
+                                for grid_note in notes.grid[ceil(column_now/2)]:
                                     if grid_note.note == note[0]:
                                         grid_note.isOn = True
                             else:
-                                for grid_note in shift.grid[int(column_now/2)+1]:
+                                for grid_note in shift.grid[ceil(column_now/2)]:
                                     if grid_note.note == note[0]:
                                         grid_note.isOn = True
-                            if column_now - round(column_now) <= 0:
-                                midi.send(NoteOn(note[0], 127))
+                            #if round(column_now) - column_now > 0:
+                                #midi.send(NoteOn(note[0], 127))
                             trellis.pixels._neopixel[press_to_light(note[1])] = RECORD_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
