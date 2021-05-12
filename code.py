@@ -375,6 +375,8 @@ while True:
                                     reset_column(notes, row_offset, (i-2), NOTE_ON, NOTE_OFF, ACCENT)
                             if i == 1:
                                 reset_column(notes, row_offset, column_offset + 7, NOTE_ON, NOTE_OFF, ACCENT)
+                                print(last_step%8)
+                                reset_column(notes, row_offset, (last_step-1)%8, NOTE_ON, NOTE_OFF, ACCENT)
                         play_column(notes, i-1)
                             
             """
