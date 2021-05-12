@@ -522,6 +522,8 @@ while True:
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
+                    for cc in toggled_cc:
+                        trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
@@ -574,8 +576,11 @@ while True:
                     
                 else:
                     print(pressed_buttons)
+                    
                 button_is_held = False
-        
+            else:
+                reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                
             """
             Shift Mode
             """
