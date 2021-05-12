@@ -98,7 +98,6 @@ def reset_colors(notes, note_on, note_off=(0, 0, 0), row_offset=0, column_offset
                 trellis.pixels._neopixel[note.index] = note_off
 
 def light_column(column, column_color):
-    #print(column)
     for i in range(ROWS_ON_BOARD):
         trellis.pixels._neopixel[ column + (i*len(trellis._matrix.row_pins)) ] = column_color
     
@@ -227,6 +226,7 @@ SHIFT_COLUMN_COLOR = (  50,   0, 255 )
 SHIFT_ACCENT       = ( 255, 191,  63 )
 EDIT_CC_COLOR      = ( 255, 191, 191 )
 MANUAL_NOTE_COLOR  = (   0, 255,   0 )
+RECORD_NOTE_COLOR  = ( 255,   0,   0 )
 MANUAL_CC_COLOR    = (   0, 255,  63 )
 
 """
@@ -244,6 +244,7 @@ Button Combonations
 """
 MANUAL_CC_COMBO              = [(3, 4), (0, 4)]
 MANUAL_NOTE_COMBO            = [(3, 4), (0, 5)]
+RECORD_NOTE_COMBO            = [(3, 5), (0, 5)]
 BACK_COMBO                   = [(3, 0), (0, 0), (3, 7)]
 CLEAR_COMBO                  = [(3, 0), (0, 0), (3, 1)]
 SHIFT_COMBO                  = [(3, 0), (0, 0), (3, 2)]
@@ -383,7 +384,6 @@ while True:
             Main Grid
             """
             if ticks % 12 == 0:
-                eighth_note += 1
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step + 1 == i:
                         if main_mode:
@@ -405,10 +405,9 @@ while True:
                                     reset_column(notes, row_offset, (i-2), NOTE_ON, NOTE_OFF, ACCENT)
                             if i == 1:
                                 reset_column(notes, row_offset, column_offset + 7, NOTE_ON, NOTE_OFF, ACCENT)
-                                print(last_step%8)
                                 reset_column(notes, row_offset, (last_step-1)%8, NOTE_ON, NOTE_OFF, ACCENT)
                         play_column(notes, i-1)
-                            
+                eighth_note += 1           
             """
             Shift Grid
             """
@@ -574,6 +573,36 @@ while True:
                             trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
                     
+                elif pressed_buttons[-2:] == RECORD_NOTE_COMBO: 
+                    if len(pressed_buttons) > 2:
+                        manual_notes = []
+                        for button in pressed_buttons:
+                            if button == (3, 5) or button == (0, 5):
+                                pass
+                            else:
+                                manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button))
+                    else:
+                        manual_notes = []
+                    for note in manual_notes:
+                        if note not in prev_manual_notes:
+                            column_now = ticks%(last_step*12)/6
+                            if round(column_now) % 2 == 0:
+                                for grid_note in notes.grid[int(column_now/2)+1]:
+                                    if grid_note.note == note[0]:
+                                        grid_note.isOn = True
+                            else:
+                                for grid_note in shift.grid[int(column_now/2)+1]:
+                                    if grid_note.note == note[0]:
+                                        grid_note.isOn = True
+                            if column_now - round(column_now) <= 0:
+                                midi.send(NoteOn(note[0], 127))
+                            trellis.pixels._neopixel[press_to_light(note[1])] = RECORD_NOTE_COLOR
+                    for note in prev_manual_notes:
+                        if note not in manual_notes:
+                            midi.send(NoteOff(note[0], 0))
+                            trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
+                    prev_manual_notes = manual_notes
+                    
                 else:
                     print(pressed_buttons)
                     
@@ -639,8 +668,37 @@ while True:
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
 
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
+                    for cc in toggled_cc:
+                        trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
                     if len(pressed_buttons) > 2:
-                        print(pressed_buttons[0])
+                        manual_cc = []
+                        for button in pressed_buttons:
+                            if button == (3, 4) or button == (0, 4):
+                                pass
+                            else:
+                                manual_cc.append((MANUAL_CC[button[0]][button[1]], button))
+                    else:
+                        manual_cc = []
+                    for cc in manual_cc:
+                        if cc not in prev_manual_cc:
+                            if cc[1][0] <= 1:
+                                midi.send(ControlChange(cc[0], 127))
+                                trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                            if cc[1][0] >= 2:
+                                if cc not in toggled_cc:
+                                    toggled_cc.append(cc)
+                                    midi.send(ControlChange(cc[0], 127))
+                                    trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                                else:
+                                    toggled_cc.remove(cc)
+                                    midi.send(ControlChange(cc[0], 0))
+                                    trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
+                    for cc in prev_manual_cc:
+                        if cc not in manual_cc:
+                            if cc[1][0] <=1:
+                                midi.send(ControlChange(cc[0], 0))
+                                trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
+                    prev_manual_cc = manual_cc
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
                     if len(pressed_buttons) > 2:
