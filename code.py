@@ -354,7 +354,6 @@ while True:
             """
             if ticks % 12 == 0:
                 eighth_note += 1
-                
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % NUMBER_OF_COLUMNS == i:
                         if main_mode:
@@ -375,14 +374,13 @@ while True:
                                     light_column((i-1)%8, COLUMN_COLOR)
                                     reset_column(notes, row_offset, (i-2), NOTE_ON, NOTE_OFF, ACCENT)
                             if i == 1:
-                                reset_column(notes, row_offset, 7, NOTE_ON, NOTE_OFF, ACCENT)
+                                reset_column(notes, row_offset, column_offset + 7, NOTE_ON, NOTE_OFF, ACCENT)
                         play_column(notes, i-1)
                             
             """
             Shift Grid
             """
             if ticks % 12 == 6:
-                
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % NUMBER_OF_COLUMNS == i:
                         if shift_mode:
@@ -402,7 +400,7 @@ while True:
                                     light_column((i-1)%8, SHIFT_COLUMN_COLOR)
                                     reset_column(shift, row_offset, (i-2), SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
                             if i == 1:
-                                reset_column(shift, row_offset, 7, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
+                                reset_column(shift, row_offset, column_offset + 7, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
                         play_column(shift, i-1)
             ticks += 1
             
