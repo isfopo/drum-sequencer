@@ -361,6 +361,7 @@ manual_notes = []
 prev_manual_notes = []
 manual_cc = []
 prev_manual_cc = []
+toggled_cc = []
 
 while True:
     
@@ -532,13 +533,23 @@ while True:
                         manual_cc = []
                     for cc in manual_cc:
                         if cc not in prev_manual_cc:
-                            print(cc)
-                            midi.send(ControlChange(cc[0], 127))
-                            trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                            if cc[1][0] <= 1:
+                                midi.send(ControlChange(cc[0], 127))
+                                trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                            if cc[1][0] >= 2:
+                                if cc not in toggled_cc:
+                                    toggled_cc.append(cc)
+                                    midi.send(ControlChange(cc[0], 127))
+                                    trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                                else:
+                                    toggled_cc.remove(cc)
+                                    midi.send(ControlChange(cc[0], 0))
+                                    trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
                     for cc in prev_manual_cc:
                         if cc not in manual_cc:
-                            midi.send(ControlChange(cc[0], 0))
-                            trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
+                            if cc[1][0] <=1:
+                                midi.send(ControlChange(cc[0], 0))
+                                trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
                     prev_manual_cc = manual_cc
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
@@ -700,4 +711,3 @@ while True:
         handle_axis(x_mode, accelerometer.acceleration[1], x_up_cc, x_down_cc)
         handle_axis(y_mode, accelerometer.acceleration[0], y_up_cc, y_down_cc)
         handle_axis(z_mode, accelerometer.acceleration[2], z_up_cc, z_down_cc)
-
