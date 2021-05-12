@@ -306,7 +306,7 @@ Offset
 """
 row_offset = 0
 column_offset = 0
-
+last_step = 12
 """
 Modes
 """
@@ -355,10 +355,10 @@ while True:
             if ticks % 12 == 0:
                 eighth_note += 1
                 for i in range(NUMBER_OF_COLUMNS):
-                    if eighth_note % NUMBER_OF_COLUMNS == i:
+                    if eighth_note % last_step + 1 == i:
                         if main_mode:
                             if i % 8 == 0:
-                                if column_offset == NUMBER_OF_COLUMNS - 8:
+                                if column_offset == last_step+1 - 8:
                                     if i == 0:
                                         light_column(7, COLUMN_COLOR)
                                         reset_column(notes, row_offset, 6, NOTE_ON, NOTE_OFF, ACCENT)
@@ -382,10 +382,10 @@ while True:
             """
             if ticks % 12 == 6:
                 for i in range(NUMBER_OF_COLUMNS):
-                    if eighth_note % NUMBER_OF_COLUMNS == i:
+                    if eighth_note % last_step == i:
                         if shift_mode:
                             if i % 8 == 0:
-                                if column_offset == NUMBER_OF_COLUMNS - 8:
+                                if column_offset == last_step - 8:
                                     if i == 0:
                                         light_column(7, SHIFT_COLUMN_COLOR)
                                         reset_column(shift, row_offset, 6, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
