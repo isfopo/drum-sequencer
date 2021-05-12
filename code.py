@@ -258,7 +258,7 @@ Integers
 HOLD_TIME = 48 #in ticks
 
 """
-Sets
+Lists
 """
 CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     25, 17,  9, 1,
@@ -269,6 +269,16 @@ CORRECT_INDEX  =  [ 24, 16,  8, 0,
                     30, 22, 14, 6,
                     31, 23, 15, 7 ]
 
+MANUAL_NOTES      = [ [ 48, 44, 40, 36 ],
+                      [ 49, 45, 41, 37 ],
+                      [ 50, 46, 42, 38 ],
+                      [ 51, 47, 43, 39 ] ]
+
+MANUAL_CC_TOGGLE  = [ [ 22, 23, 24, 25 ],
+                      [ 26, 27, 28, 29 ] ]
+
+MANUAL_CC_TRIGGER = [ [ 30, 31, 85, 86 ],
+                      [ 87, 88, 89, 90 ] ]
 
 """
 ======== Global Variables ========
@@ -297,16 +307,21 @@ last_press = 0
 held_note = 0
 tick_placeholder = 0
 
+"""
+Bools
+"""
 on = False
 button_is_held = False
 combo_pressed = False
+manual_is_pressed = False
 
 """
 Offset
 """
 row_offset = 0
 column_offset = 0
-last_step = 12
+last_step = 16
+
 """
 Modes
 """
@@ -326,12 +341,15 @@ z_mode = 'none'
 """
 Axis cc's
 """
-x_up_cc = 14
-x_down_cc = 15
-y_up_cc = 23 #TODO make sure these are unused
-y_down_cc = 24
-z_up_cc = 25
-z_down_cc = 26
+x_up_cc = 3
+x_down_cc = 9
+y_up_cc = 14
+y_down_cc = 15
+z_up_cc = 20
+z_down_cc = 21
+
+manual_notes = []
+prev_manual_notes = []
 
 while True:
     
@@ -506,7 +524,23 @@ while True:
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO:
                     if len(pressed_buttons) > 2:
-                        print(pressed_buttons[0])
+                        manual_notes = []
+                        for button in pressed_buttons:
+                            if button == (3, 4) or button == (0, 5):
+                                pass
+                            else:
+                                manual_notes.append(MANUAL_NOTES[button[0]][button[1]])
+                        for note in manual_notes:
+                            pass
+                    else:
+                        manual_notes = []
+                    for note in manual_notes:
+                        if note not in prev_manual_notes:
+                            midi.send(NoteOn(note, 127))
+                    for note in prev_manual_notes:
+                        if note not in manual_notes:
+                            midi.send(NoteOff(note, 0))
+                    prev_manual_notes = manual_notes
                 else:
                     print(pressed_buttons)
                 button_is_held = False
