@@ -218,17 +218,18 @@ def row_off(grid, row):
 """
 Colors
 """
-NOTE_ON            = (   0,  63,  63 )
-NOTE_OFF           = (   0,   0,   0 )
-COLUMN_COLOR       = ( 255,   0,  50 )
-ACCENT             = (  63, 191, 225 )
-SHIFT_NOTE_ON      = (  63,  63,   0 )
-SHIFT_COLUMN_COLOR = (  50,   0, 255 )
-SHIFT_ACCENT       = ( 255, 191,  63 )
-EDIT_CC_COLOR      = ( 255, 191, 191 )
-MANUAL_NOTE_COLOR  = (   0, 255,   0 )
-RECORD_NOTE_COLOR  = ( 255,   0,   0 )
-MANUAL_CC_COLOR    = (   0, 255,  63 )
+NOTE_ON                = (   0,  63,  63 )
+NOTE_OFF               = (   0,   0,   0 )
+COLUMN_COLOR           = ( 255,   0,  50 )
+ACCENT                 = (  63, 191, 225 )
+SHIFT_NOTE_ON          = (  63,  63,   0 )
+SHIFT_COLUMN_COLOR     = (  50,   0, 255 )
+SHIFT_ACCENT           = ( 255, 191,  63 )
+EDIT_CC_COLOR          = ( 191, 191, 255 )
+MANUAL_NOTE_COLOR      = (   0, 255,   0 )
+MANUAL_NOTE_COLOR_ALT  = (   0, 191, 191 )
+RECORD_NOTE_COLOR      = ( 255,   0,   0 )
+MANUAL_CC_COLOR        = (   0, 255,  63 )
 
 """
 Grid Parameters
@@ -327,7 +328,7 @@ button_is_held = False
 combo_pressed = False
 manual_is_pressed = False
 
-seperate_manual_note_channel = True
+seperate_manual_note_channel = False
 
 """
 Offset
@@ -570,7 +571,7 @@ while True:
                     for note in manual_notes:
                         if note not in prev_manual_notes:
                             midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR
+                            trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
@@ -720,7 +721,7 @@ while True:
                     for note in manual_notes:
                         if note not in prev_manual_notes:
                             midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR
+                            trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
