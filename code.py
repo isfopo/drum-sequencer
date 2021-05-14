@@ -14,7 +14,7 @@ from adafruit_midi.note_off import NoteOff
 from adafruit_midi.note_on import NoteOn
 from adafruit_midi.control_change import ControlChange
 
-midi = adafruit_midi.MIDI(midi_in=usb_midi.ports[0], midi_out=usb_midi.ports[1], in_channel=0)
+midi = adafruit_midi.MIDI(midi_in=usb_midi.ports[0], midi_out=usb_midi.ports[1], in_channel=0, out_channel=0)
 trellis = adafruit_trellism4.TrellisM4Express(rotation=90)
 i2c = busio.I2C(board.ACCELEROMETER_SCL, board.ACCELEROMETER_SDA)
 accelerometer = adafruit_adxl34x.ADXL345(i2c)
@@ -248,7 +248,7 @@ MANUAL_NOTE_COMBO            = [(3, 4), (0, 5)]
 RECORD_NOTE_COMBO            = [(3, 5), (0, 5)]
 BACK_COMBO                   = [(3, 0), (0, 0), (3, 7)]
 CLEAR_COMBO                  = [(3, 0), (0, 0), (3, 1)]
-SHIFT_COMBO                  = [(3, 0), (0, 0), (3, 2)]
+SHIFT_MODE_COMBO             = [(3, 0), (0, 0), (3, 2)]
 EDIT_CC_COMBO                = [(3, 0), (0, 0), (3, 3)]
 EDIT_CC_BACK                 = [(3, 0), (3, 1), (3, 7)]
 TOGGLE_X_COMBO               = [(2, 0), (0, 0), (2, 1)]
@@ -258,6 +258,7 @@ INCREASE_ROW_OFFSET_COMBO    = [(3, 3), (2, 3), (0, 3)]
 DECREASE_ROW_OFFSET_COMBO    = [(2, 3), (1, 3), (0, 3)]
 INCREASE_COLUMN_OFFSET_COMBO = [(2, 3), (0, 3), (2, 4)]
 DECREASE_COLUMN_OFFSET_COMBO = [(2, 2), (2, 3), (0, 3)]
+
 
 """
 Integers
@@ -325,6 +326,8 @@ on = False
 button_is_held = False
 combo_pressed = False
 manual_is_pressed = False
+
+seperate_manual_note_channel = True
 
 """
 Offset
@@ -495,7 +498,7 @@ while True:
                     clear_grid(shift)
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
-                elif pressed_buttons == SHIFT_COMBO:
+                elif pressed_buttons == SHIFT_MODE_COMBO:
                     main_mode = False
                     shift_mode = True
                     reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
@@ -566,11 +569,11 @@ while True:
                         manual_notes = []
                     for note in manual_notes:
                         if note not in prev_manual_notes:
-                            midi.send(NoteOn(note[0], 127))
+                            midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
                             trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
-                            midi.send(NoteOff(note[0], 0))
+                            midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
                             trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
                     
