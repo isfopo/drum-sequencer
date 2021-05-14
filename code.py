@@ -258,7 +258,7 @@ INCREASE_ROW_OFFSET_COMBO    = [(3, 3), (2, 3), (0, 3)]
 DECREASE_ROW_OFFSET_COMBO    = [(2, 3), (1, 3), (0, 3)]
 INCREASE_COLUMN_OFFSET_COMBO = [(2, 3), (0, 3), (2, 4)]
 DECREASE_COLUMN_OFFSET_COMBO = [(2, 2), (2, 3), (0, 3)]
-
+CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
 
 """
 Integers
@@ -606,6 +606,9 @@ while True:
                             midi.send(NoteOff(note[0], 0))
                             trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
+                
+                elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
+                    seperate_manual_note_channel = False if seperate_manual_note_channel else True
                     
                 else:
                     print(pressed_buttons)
@@ -716,11 +719,11 @@ while True:
                         manual_notes = []
                     for note in manual_notes:
                         if note not in prev_manual_notes:
-                            midi.send(NoteOn(note[0], 127))
+                            midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
                             trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
-                            midi.send(NoteOff(note[0], 0))
+                            midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
                             trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
@@ -753,6 +756,9 @@ while True:
                             midi.send(NoteOff(note[0], 0))
                             trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
+                
+                elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
+                    seperate_manual_note_channel = False if seperate_manual_note_channel else True
                     
                 else:
                     print(pressed_buttons)
