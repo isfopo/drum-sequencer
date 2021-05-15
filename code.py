@@ -275,17 +275,18 @@ EDIT_CC_BACK                 = [(3, 0), (3, 1), (3, 7)]
 TOGGLE_X_COMBO               = [(2, 0), (0, 0), (2, 1)]
 TOGGLE_Y_COMBO               = [(2, 0), (0, 0), (2, 2)]
 TOGGLE_Z_COMBO               = [(2, 0), (0, 0), (2, 3)]
-INCREASE_ROW_OFFSET_COMBO    = [(3, 3), (2, 3), (0, 3)]
-DECREASE_ROW_OFFSET_COMBO    = [(2, 3), (1, 3), (0, 3)]
-INCREASE_COLUMN_OFFSET_COMBO = [(2, 3), (0, 3), (2, 4)]
-DECREASE_COLUMN_OFFSET_COMBO = [(2, 2), (2, 3), (0, 3)]
+OFFSET_CHANGE_MODE_COMBO	 = [(3, 6), (0, 6)]
+INCREASE_ROW_OFFSET_COMBO    = (3, 4)
+DECREASE_ROW_OFFSET_COMBO    = (1, 4)
+INCREASE_COLUMN_OFFSET_COMBO = (2, 5)
+DECREASE_COLUMN_OFFSET_COMBO = (2, 3)
 PATTERN_SHIFT_MODE_COMBO     = [(3, 7), (0, 7)]
 SHIFT_LEFT				     = (2, 4)
 SHIFT_RIGHT				     = (2, 6)
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
 LAST_STEP_EDIT_COMBO         = [(2, 7), (0, 7)]
-LAST_STEP_INCREASE	         = (1, 4)
-LAST_STEP_DECREASE           = (1, 6)
+LAST_STEP_INCREASE	         = (1, 6)
+LAST_STEP_DECREASE           = (1, 4)
 """
 Integers
 """
@@ -533,22 +534,24 @@ while True:
                     main_mode = False
                     edit_cc_mode = True
                     reset_colors(cc_edit, EDIT_CC_COLOR, NOTE_OFF, row_offset, column_offset)
-                    
-                elif pressed_buttons == INCREASE_ROW_OFFSET_COMBO:
-                    row_offset = increase_row_offset(row_offset)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                    
-                elif pressed_buttons == DECREASE_ROW_OFFSET_COMBO:
-                    row_offset = decrease_row_offset(row_offset)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                    
-                elif pressed_buttons == INCREASE_COLUMN_OFFSET_COMBO:
-                    column_offset = increase_column_offset(column_offset)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                    
-                elif pressed_buttons == DECREASE_COLUMN_OFFSET_COMBO:
-                    column_offset = decrease_column_offset(column_offset)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                
+                elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
+                    if len(pressed_buttons) > 2:
+                        if pressed_buttons[0] == INCREASE_ROW_OFFSET_COMBO:
+                            row_offset = increase_row_offset(row_offset)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            
+                        elif pressed_buttons[0] == DECREASE_ROW_OFFSET_COMBO:
+                            row_offset = decrease_row_offset(row_offset)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            
+                        elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET_COMBO:
+                            column_offset = increase_column_offset(column_offset)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            
+                        elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET_COMBO:
+                            column_offset = decrease_column_offset(column_offset)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
