@@ -288,11 +288,22 @@ CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
 LAST_STEP_EDIT_COMBO         = [(2, 7), (0, 7)]
 LAST_STEP_INCREASE	         = (1, 6)
 LAST_STEP_DECREASE           = (1, 4)
+SELECT_PATTERN_MODE			 = [(3, 0), (0, 0), (3, 4)]
 
 """
 Integers
 """
 HOLD_TIME = 48 #in ticks
+
+"""
+Axis cc's #TODO change these to CAPS
+"""
+x_up_cc = 3
+x_down_cc = 9
+y_up_cc = 14
+y_down_cc = 15
+z_up_cc = 20
+z_down_cc = 21
 
 """
 Lists
@@ -325,11 +336,13 @@ MANUAL_CC         = [ [ 22, 23, 24, 25 ],
 ======== Global Variables ========
 """
 
+current_pattern = 0
+
 """
 Grid Objects
 """
-notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, starting_note)
-shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, starting_note)
+notes = None
+shift = None
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 
 #print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
@@ -343,7 +356,7 @@ eighth_note = 0
 """
 Placeholders
 """
-old_message = 0
+old_message = 0 #TODO make these all None
 last_press = 0
 held_note = 0
 tick_placeholder = 0
@@ -377,25 +390,31 @@ manual_cc_mode = False
 """
 Axis Modes
 """
-x_mode = 'none'
-y_mode = 'none'
-z_mode = 'none'
+x_mode = None
+y_mode = None
+z_mode = None
 
-"""
-Axis cc's
-"""
-x_up_cc = 3
-x_down_cc = 9
-y_up_cc = 14
-y_down_cc = 15
-z_up_cc = 20
-z_down_cc = 21
 
 manual_notes = []
 prev_manual_notes = []
 manual_cc = []
 prev_manual_cc = []
 toggled_cc = []
+
+
+try:
+    with open("/save.json") as save:
+        pattern = json.loads(save.read())['patterns'][current_pattern]
+        print(pattern)
+        notes = pattern["notes"] if pattern["notes"] else NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, starting_note)
+        shift = pattern["shift"] if pattern["shift"] else NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, starting_note)
+        last_step = pattern["last_step"] if pattern["last_step"] else 8
+        if pattern["axis_modes"]:
+            x_mode = pattern["axis_modes"][0]
+            y_mode = pattern["axis_modes"][1]
+            z_mode = pattern["axis_modes"][2]
+except OSError as e:
+    print(e)
 
 while True:
     
@@ -659,6 +678,12 @@ while True:
                         if pressed_buttons[0] == LAST_STEP_DECREASE:
                             last_step = last_step - 1 if last_step > 1 else last_step
                  
+                elif pressed_buttons == SELECT_PATTERN_MODE:
+                    try:
+                        with open("/save.json") as save:
+                            print(json.loads(save.read())['patterns'])
+                    except OSError as e:
+                        print(e)
                 else:
                     print(pressed_buttons)
                     
