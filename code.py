@@ -1,12 +1,14 @@
 from math import floor
-import board
-import busio
+from board import ACCELEROMETER_SCL
+from board import ACCELEROMETER_SDA
+from busio import I2C
+import json
 
-import usb_midi
-import adafruit_midi
-import adafruit_trellism4
-import adafruit_adxl34x
+from usb_midi import ports
+from adafruit_trellism4 import TrellisM4Express
+from adafruit_adxl34x import ADXL345
 
+from adafruit_midi import MIDI
 from adafruit_midi.timing_clock import TimingClock
 from adafruit_midi.start import Start
 from adafruit_midi.stop import Stop
@@ -14,10 +16,10 @@ from adafruit_midi.note_off import NoteOff
 from adafruit_midi.note_on import NoteOn
 from adafruit_midi.control_change import ControlChange
 
-midi = adafruit_midi.MIDI(midi_in=usb_midi.ports[0], midi_out=usb_midi.ports[1], in_channel=0, out_channel=0)
-trellis = adafruit_trellism4.TrellisM4Express(rotation=90)
-i2c = busio.I2C(board.ACCELEROMETER_SCL, board.ACCELEROMETER_SDA)
-accelerometer = adafruit_adxl34x.ADXL345(i2c)
+midi = MIDI(midi_in=ports[0], midi_out=ports[1], in_channel=0, out_channel=0)
+trellis = TrellisM4Express(rotation=90)
+i2c = I2C(ACCELEROMETER_SCL, ACCELEROMETER_SDA)
+accelerometer = ADXL345(i2c)
 
 """
 ======== Classes ========
@@ -65,7 +67,7 @@ class Cell:
     def off(self):
         self.is_on = False
 
-class Note:
+class Note(Cell):
     def __init__(self, note, index):
         self.note = note
         self.index = index
@@ -80,9 +82,6 @@ class Note:
     def stop(self):
         if self.is_on:
             midi.send(NoteOff(self.note, 0))
-        
-    def toggle(self):
-        self.is_on = True if not self.is_on else False
         
     def toggle_accent(self):
         self.isAccented = True if not self.isAccented else False
@@ -254,7 +253,7 @@ MANUAL_CC_COLOR        = (   0, 255,  63 )
 """
 Grid Parameters
 """
-STARTING_NOTE     = 36
+starting_note     = 36
 NUMBER_OF_COLUMNS = 32
 NUMBER_OF_ROWS    = 16
 COLUMNS_ON_BOARD  = len(trellis._matrix.row_pins)
@@ -276,17 +275,20 @@ TOGGLE_X_COMBO               = [(2, 0), (0, 0), (2, 1)]
 TOGGLE_Y_COMBO               = [(2, 0), (0, 0), (2, 2)]
 TOGGLE_Z_COMBO               = [(2, 0), (0, 0), (2, 3)]
 OFFSET_CHANGE_MODE_COMBO	 = [(3, 6), (0, 6)]
-INCREASE_ROW_OFFSET_COMBO    = (3, 4)
-DECREASE_ROW_OFFSET_COMBO    = (1, 4)
-INCREASE_COLUMN_OFFSET_COMBO = (2, 5)
-DECREASE_COLUMN_OFFSET_COMBO = (2, 3)
+INCREASE_ROW_OFFSET          = (3, 4)
+DECREASE_ROW_OFFSET          = (1, 4)
+INCREASE_COLUMN_OFFSET       = (2, 5)
+DECREASE_COLUMN_OFFSET       = (2, 3)
 PATTERN_SHIFT_MODE_COMBO     = [(3, 7), (0, 7)]
+SHIFT_UP					 = (3, 5)
+SHIFT_DOWN                   = (1, 5)
 SHIFT_LEFT				     = (2, 4)
 SHIFT_RIGHT				     = (2, 6)
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
 LAST_STEP_EDIT_COMBO         = [(2, 7), (0, 7)]
 LAST_STEP_INCREASE	         = (1, 6)
 LAST_STEP_DECREASE           = (1, 4)
+
 """
 Integers
 """
@@ -326,8 +328,8 @@ MANUAL_CC         = [ [ 22, 23, 24, 25 ],
 """
 Grid Objects
 """
-notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
-shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
+notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, starting_note)
+shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, starting_note)
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 
 #print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
@@ -495,7 +497,7 @@ while True:
         if main_mode:
             if pressed_buttons and not combo_pressed:
                 for note in notes.grid[pressed_buttons[0][1] + column_offset]:
-                    if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
+                    if note.note == pressed_buttons[0][0] + starting_note + row_offset:
                         tick_placeholder = ticks
                         held_note = note
                         button_is_held = True
@@ -537,19 +539,19 @@ while True:
                 
                 elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
                     if len(pressed_buttons) > 2:
-                        if pressed_buttons[0] == INCREASE_ROW_OFFSET_COMBO:
+                        if pressed_buttons[0] == INCREASE_ROW_OFFSET:
                             row_offset = increase_row_offset(row_offset)
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
-                        elif pressed_buttons[0] == DECREASE_ROW_OFFSET_COMBO:
+                        elif pressed_buttons[0] == DECREASE_ROW_OFFSET:
                             row_offset = decrease_row_offset(row_offset)
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
-                        elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET_COMBO:
+                        elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET:
                             column_offset = increase_column_offset(column_offset)
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
-                        elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET_COMBO:
+                        elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET:
                             column_offset = decrease_column_offset(column_offset)
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
@@ -656,8 +658,7 @@ while True:
                             last_step = last_step + 1 if last_step < NUMBER_OF_COLUMNS else last_step
                         if pressed_buttons[0] == LAST_STEP_DECREASE:
                             last_step = last_step - 1 if last_step > 1 else last_step
-                        
-                        
+                 
                 else:
                     print(pressed_buttons)
                     
@@ -671,7 +672,7 @@ while True:
         elif shift_mode:
             if pressed_buttons and not combo_pressed:
                 for note in shift.grid[pressed_buttons[0][1] + column_offset]:
-                    if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
+                    if note.note == pressed_buttons[0][0] + starting_note + row_offset:
                         tick_placeholder = ticks
                         held_note = note
                         button_is_held = True
@@ -706,21 +707,23 @@ while True:
                     clear_grid(shift)
                     reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
-                elif pressed_buttons == INCREASE_ROW_OFFSET_COMBO:
-                    row_offset = increase_row_offset(row_offset)
-                    reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                    
-                elif pressed_buttons == DECREASE_ROW_OFFSET_COMBO:
-                    row_offset = decrease_row_offset(row_offset)
-                    reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                    
-                elif pressed_buttons == INCREASE_COLUMN_OFFSET_COMBO:
-                    column_offset = increase_column_offset(column_offset)
-                    reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                    
-                elif pressed_buttons == DECREASE_COLUMN_OFFSET_COMBO:
-                    column_offset = decrease_column_offset(column_offset)
-                    reset_colors(shift, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
+                    if len(pressed_buttons) > 2:
+                        if pressed_buttons[0] == INCREASE_ROW_OFFSET:
+                            row_offset = increase_row_offset(row_offset)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            
+                        elif pressed_buttons[0] == DECREASE_ROW_OFFSET:
+                            row_offset = decrease_row_offset(row_offset)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            
+                        elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET:
+                            column_offset = increase_column_offset(column_offset)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            
+                        elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET:
+                            column_offset = decrease_column_offset(column_offset)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
 
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
