@@ -54,35 +54,35 @@ class NoteGrid:
 class Cell:
     def __init__(self, index):
         self.index = index
-        self.isOn = False
+        self.is_on = False
         
     def toggle(self):
-        self.isOn = True if not self.isOn else False
+        self.is_on = True if not self.is_on else False
         
     def on(self):
-        self.isOn = True
+        self.is_on = True
         
     def off(self):
-        self.isOn = False
+        self.is_on = False
 
 class Note:
     def __init__(self, note, index):
         self.note = note
         self.index = index
-        self.isOn = False
+        self.is_on = False
         self.isAccented = False
         
     def play(self):
         self.stop()
-        if self.isOn:
+        if self.is_on:
             midi.send(NoteOn(self.note, 127 if self.isAccented else 96))
         
     def stop(self):
-        if self.isOn:
+        if self.is_on:
             midi.send(NoteOff(self.note, 0))
         
     def toggle(self):
-        self.isOn = True if not self.isOn else False
+        self.is_on = True if not self.is_on else False
         
     def toggle_accent(self):
         self.isAccented = True if not self.isAccented else False
@@ -93,7 +93,7 @@ class Note:
 def reset_colors(notes, note_on, note_off=(0, 0, 0), row_offset=0, column_offset=0):
     for column in notes.grid[column_offset:column_offset+8]:
         for note in column[row_offset:row_offset+4]:
-            if note.isOn == True:
+            if note.is_on == True:
                 trellis.pixels._neopixel[note.index] = note_on
             else:
                 trellis.pixels._neopixel[note.index] = note_off
@@ -104,7 +104,7 @@ def light_column(column, column_color):
     
 def reset_column(notes, offset, column, note_on, note_off, accent):
     for note in notes.grid[column][offset:offset+4]:
-        if note.isOn:
+        if note.is_on:
             if note.isAccented:
                 trellis.pixels._neopixel[note.index] = accent
             else:
@@ -122,7 +122,7 @@ def stop_notes(notes):
 def clear_grid(notes):
     for column in notes.grid:
         for note in column:
-            note.isOn = False
+            note.is_on = False
             
 def scale(val, src, dst):
     output = ((val - src[0]) / (src[1]-src[0])) * (dst[1]-dst[0]) + dst[0]
@@ -170,13 +170,13 @@ def handle_axis(mode, axis, up_cc, down_cc):
 
 def handle_cc_grid(cc_edit, modes, offset):
     for mode in modes:
-        if mode == 'direct':       cc_edit.grid[1][offset].isOn = True
-        if mode == 'flip':         cc_edit.grid[2][offset].isOn = True
-        if mode == 'split':        cc_edit.grid[3][offset].isOn = True
-        if mode == 'on_off':       cc_edit.grid[4][offset].isOn = True
-        if mode == 'flip_on_off':  cc_edit.grid[5][offset].isOn = True
-        if mode == 'split_on_off': cc_edit.grid[6][offset].isOn = True
-        if mode == 'none':         cc_edit.grid[7][offset].isOn = True
+        if mode == 'direct':       cc_edit.grid[1][offset].is_on = True
+        if mode == 'flip':         cc_edit.grid[2][offset].is_on = True
+        if mode == 'split':        cc_edit.grid[3][offset].is_on = True
+        if mode == 'on_off':       cc_edit.grid[4][offset].is_on = True
+        if mode == 'flip_on_off':  cc_edit.grid[5][offset].is_on = True
+        if mode == 'split_on_off': cc_edit.grid[6][offset].is_on = True
+        if mode == 'none':         cc_edit.grid[7][offset].is_on = True
         offset -= 1
 
 def handle_select_mode(pressed_buttons):
@@ -189,7 +189,7 @@ def handle_select_mode(pressed_buttons):
     else: return 'none'
 
 def handle_cc_lights(pressed_buttons, cc_edit, row):
-    cc_edit.grid[pressed_buttons[0][1]][row].isOn = True
+    cc_edit.grid[pressed_buttons[0][1]][row].is_on = True
 
 def increase_row_offset(row_offset):
     new_offset = row_offset + 4
@@ -209,34 +209,26 @@ def decrease_column_offset(column_offset):
    
 def row_off(grid, row):   
     for column in grid.grid:
-        column[row].isOn = False
-        
-def shift_grid_up(grid):
-    print("up")
-    return grid
-
-def shift_grid_down(grid):
-    print("down")
-    return grid
+        column[row].is_on = False
 
 def shift_grid_left(grid):
     for i in range(last_step + 1):
         if i == last_step:
             for j in range(len(grid.grid[0])):
-                grid.grid[i][j].isOn = grid.grid[0][j].isOn
+                grid.grid[i][j].is_on = grid.grid[0][j].is_on
         else:
             for j in range(len(grid.grid[0])):
-                grid.grid[i][j].isOn = grid.grid[i+1][j].isOn
+                grid.grid[i][j].is_on = grid.grid[i+1][j].is_on
     return grid
 
 def shift_grid_right(grid):
     for i in reversed(range(last_step)):
         if i == 0:
             for j in range(len(grid.grid[0])):
-                grid.grid[i][j].isOn = grid.grid[last_step - 1][j].isOn
+                grid.grid[i][j].is_on = grid.grid[last_step - 1][j].is_on
         else:
             for j in range(len(grid.grid[0])):
-                grid.grid[i][j].isOn = grid.grid[i-1][j].isOn
+                grid.grid[i][j].is_on = grid.grid[i-1][j].is_on
     return grid
 
 """
@@ -509,13 +501,13 @@ while True:
                         
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
-                    trellis.pixels._neopixel[held_note.index] = NOTE_ON if not held_note.isOn else NOTE_OFF
+                    trellis.pixels._neopixel[held_note.index] = NOTE_ON if not held_note.is_on else NOTE_OFF
                     held_note.toggle() #TODO somehting is slow here - there is a slight delay when a new note is added
                     if held_note.isAccented:
                         held_note.toggle_accent()
                     button_is_held = False
                 else:
-                    if not held_note.isOn:
+                    if not held_note.is_on:
                         trellis.pixels._neopixel[held_note.index] = ACCENT if not held_note.isAccented else NOTE_OFF
                         held_note.toggle()
                     held_note.toggle_accent()
@@ -627,11 +619,11 @@ while True:
                             if round(column_now) % 2 == 0:
                                 for grid_note in notes.grid[floor(column_now/2)]:
                                     if grid_note.note == note[0]:
-                                        grid_note.isOn = True
+                                        grid_note.is_on = True
                             else:
                                 for grid_note in shift.grid[floor(column_now/2)]:
                                     if grid_note.note == note[0]:
-                                        grid_note.isOn = True
+                                        grid_note.is_on = True
                             if round(column_now) - column_now < 0:
                                 midi.send(NoteOn(note[0], 127))
                             trellis.pixels._neopixel[press_to_light(note[1])] = RECORD_NOTE_COLOR
@@ -646,14 +638,6 @@ while True:
                 
                 elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
                     if len(pressed_buttons) > 2:
-                        if pressed_buttons[0] == SHIFT_UP:
-                            notes = shift_grid_up(notes)
-                            shift = shift_grid_up(shift)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                        elif pressed_buttons[0] == SHIFT_DOWN:
-                            notes = shift_grid_down(notes)
-                            shift = shift_grid_down(shift)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                         elif pressed_buttons[0] == SHIFT_LEFT:
                             notes = shift_grid_left(notes)
                             shift = shift_grid_left(shift)
@@ -683,13 +667,13 @@ while True:
                         
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
-                    trellis.pixels._neopixel[held_note.index] = SHIFT_NOTE_ON if not held_note.isOn else NOTE_OFF
+                    trellis.pixels._neopixel[held_note.index] = SHIFT_NOTE_ON if not held_note.is_on else NOTE_OFF
                     held_note.toggle()
                     if held_note.isAccented:
                         held_note.toggle_accent()
                     button_is_held = False
                 else:
-                    if not held_note.isOn:
+                    if not held_note.is_on:
                         trellis.pixels._neopixel[held_note.index] = SHIFT_ACCENT if not held_note.isAccented else NOTE_OFF
                         held_note.toggle()
                     held_note.toggle_accent()
@@ -699,7 +683,7 @@ while True:
             """
             Shift Combos
             """
-            if len(pressed_buttons) > 1: #TODO include mode combos here as well
+            if len(pressed_buttons) > 1:
                 combo_pressed = True
                 if pressed_buttons == BACK_COMBO:
                     main_mode = True
@@ -796,11 +780,11 @@ while True:
                             if round(column_now) % 2 == 0:
                                 for grid_note in notes.grid[floor(column_now/2)]:
                                     if grid_note.note == note[0]:
-                                        grid_note.isOn = True
+                                        grid_note.is_on = True
                             else:
                                 for grid_note in shift.grid[floor(column_now/2)]:
                                     if grid_note.note == note[0]:
-                                        grid_note.isOn = True
+                                        grid_note.is_on = True
                             if round(column_now) - column_now < 0:
                                 midi.send(NoteOn(note[0], 127))
                             trellis.pixels._neopixel[press_to_light(note[1])] = RECORD_NOTE_COLOR
@@ -815,14 +799,6 @@ while True:
                 
                 elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
                     if len(pressed_buttons) > 2:
-                        if pressed_buttons[0] == SHIFT_UP:
-                            notes = shift_grid_up(notes)
-                            shift = shift_grid_up(shift)
-                            reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                        elif pressed_buttons[0] == SHIFT_DOWN:
-                            notes = shift_grid_down(notes)
-                            shift = shift_grid_down(shift)
-                            reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                         elif pressed_buttons[0] == SHIFT_LEFT:
                             notes = shift_grid_left(notes)
                             shift = shift_grid_left(shift)
