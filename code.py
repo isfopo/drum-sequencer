@@ -280,12 +280,12 @@ DECREASE_ROW_OFFSET_COMBO    = [(2, 3), (1, 3), (0, 3)]
 INCREASE_COLUMN_OFFSET_COMBO = [(2, 3), (0, 3), (2, 4)]
 DECREASE_COLUMN_OFFSET_COMBO = [(2, 2), (2, 3), (0, 3)]
 PATTERN_SHIFT_MODE_COMBO     = [(3, 7), (0, 7)]
-SHIFT_UP				     = (3, 5)
-SHIFT_DOWN					 = (1, 5)
 SHIFT_LEFT				     = (2, 4)
 SHIFT_RIGHT				     = (2, 6)
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
-
+LAST_STEP_EDIT_COMBO         = [(2, 7), (0, 7)]
+LAST_STEP_INCREASE	         = (1, 4)
+LAST_STEP_DECREASE           = (1, 6)
 """
 Integers
 """
@@ -646,7 +646,15 @@ while True:
                             notes = shift_grid_right(notes)
                             shift = shift_grid_right(shift)
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                            
+                
+                elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO:
+                    if len(pressed_buttons) > 2:
+                        if pressed_buttons[0] == LAST_STEP_INCREASE:
+                            last_step = last_step + 1 if last_step < NUMBER_OF_COLUMNS else last_step
+                        if pressed_buttons[0] == LAST_STEP_DECREASE:
+                            last_step = last_step - 1 if last_step > 1 else last_step
+                        
+                        
                 else:
                     print(pressed_buttons)
                     
@@ -807,7 +815,14 @@ while True:
                             notes = shift_grid_right(notes)
                             shift = shift_grid_right(shift)
                             reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                    
+                
+                elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO:
+                    if len(pressed_buttons) > 2:
+                        if pressed_buttons[0] == LAST_STEP_INCREASE:
+                            last_step = last_step + 1 if last_step < NUMBER_OF_COLUMNS else last_step
+                        if pressed_buttons[0] == LAST_STEP_DECREASE:
+                            last_step = last_step - 1 if last_step > 1 else last_step
+                            
                 else:
                     print(pressed_buttons)
                     
