@@ -237,7 +237,6 @@ def shift_grid_right(grid):
         else:
             for j in range(len(grid.grid[0])):
                 grid.grid[i][j].isOn = grid.grid[i-1][j].isOn
-    print(list(map(lambda x: list(map(lambda y: y.isOn, x)), grid.grid)))
     return grid
 
 """
@@ -819,19 +818,19 @@ while True:
                         if pressed_buttons[0] == SHIFT_UP:
                             notes = shift_grid_up(notes)
                             shift = shift_grid_up(shift)
-                            reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                         elif pressed_buttons[0] == SHIFT_DOWN:
                             notes = shift_grid_down(notes)
                             shift = shift_grid_down(shift)
-                            reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                         elif pressed_buttons[0] == SHIFT_LEFT:
                             notes = shift_grid_left(notes)
                             shift = shift_grid_left(shift)
-                            reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                         elif pressed_buttons[0] == SHIFT_RIGHT:
                             notes = shift_grid_right(notes)
                             shift = shift_grid_right(shift)
-                            reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 else:
                     print(pressed_buttons)
