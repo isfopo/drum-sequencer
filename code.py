@@ -211,6 +211,35 @@ def row_off(grid, row):
     for column in grid.grid:
         column[row].isOn = False
         
+def shift_grid_up(grid):
+    print("up")
+    return grid
+
+def shift_grid_down(grid):
+    print("down")
+    return grid
+
+def shift_grid_left(grid):
+    for i in range(last_step + 1):
+        if i == last_step:
+            for j in range(len(grid.grid[0])):
+                grid.grid[i][j].isOn = grid.grid[0][j].isOn
+        else:
+            for j in range(len(grid.grid[0])):
+                grid.grid[i][j].isOn = grid.grid[i+1][j].isOn
+    return grid
+
+def shift_grid_right(grid):
+    for i in reversed(range(last_step)):
+        if i == 0:
+            for j in range(len(grid.grid[0])):
+                grid.grid[i][j].isOn = grid.grid[last_step - 1][j].isOn
+        else:
+            for j in range(len(grid.grid[0])):
+                grid.grid[i][j].isOn = grid.grid[i-1][j].isOn
+    print(list(map(lambda x: list(map(lambda y: y.isOn, x)), grid.grid)))
+    return grid
+
 """
 ======== Constants ========
 """
@@ -259,6 +288,11 @@ INCREASE_ROW_OFFSET_COMBO    = [(3, 3), (2, 3), (0, 3)]
 DECREASE_ROW_OFFSET_COMBO    = [(2, 3), (1, 3), (0, 3)]
 INCREASE_COLUMN_OFFSET_COMBO = [(2, 3), (0, 3), (2, 4)]
 DECREASE_COLUMN_OFFSET_COMBO = [(2, 2), (2, 3), (0, 3)]
+PATTERN_SHIFT_MODE_COMBO     = [(3, 7), (0, 7)]
+SHIFT_UP				     = (3, 5)
+SHIFT_DOWN					 = (1, 5)
+SHIFT_LEFT				     = (2, 4)
+SHIFT_RIGHT				     = (2, 6)
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
 
 """
@@ -610,7 +644,26 @@ while True:
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
                     seperate_manual_note_channel = False if seperate_manual_note_channel else True
-                    
+                
+                elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
+                    if len(pressed_buttons) > 2:
+                        if pressed_buttons[0] == SHIFT_UP:
+                            notes = shift_grid_up(notes)
+                            shift = shift_grid_up(shift)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                        elif pressed_buttons[0] == SHIFT_DOWN:
+                            notes = shift_grid_down(notes)
+                            shift = shift_grid_down(shift)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                        elif pressed_buttons[0] == SHIFT_LEFT:
+                            notes = shift_grid_left(notes)
+                            shift = shift_grid_left(shift)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                        elif pressed_buttons[0] == SHIFT_RIGHT:
+                            notes = shift_grid_right(notes)
+                            shift = shift_grid_right(shift)
+                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            
                 else:
                     print(pressed_buttons)
                     
@@ -760,6 +813,25 @@ while True:
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
                     seperate_manual_note_channel = False if seperate_manual_note_channel else True
+                
+                elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
+                    if len(pressed_buttons) > 2:
+                        if pressed_buttons[0] == SHIFT_UP:
+                            notes = shift_grid_up(notes)
+                            shift = shift_grid_up(shift)
+                            reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                        elif pressed_buttons[0] == SHIFT_DOWN:
+                            notes = shift_grid_down(notes)
+                            shift = shift_grid_down(shift)
+                            reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                        elif pressed_buttons[0] == SHIFT_LEFT:
+                            notes = shift_grid_left(notes)
+                            shift = shift_grid_left(shift)
+                            reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                        elif pressed_buttons[0] == SHIFT_RIGHT:
+                            notes = shift_grid_right(notes)
+                            shift = shift_grid_right(shift)
+                            reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 else:
                     print(pressed_buttons)
