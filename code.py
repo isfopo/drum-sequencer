@@ -222,10 +222,10 @@ def shift_grid_left(grid):
     return grid
 
 def shift_grid_right(grid):
-    for i in reversed(range(last_step)):
+    for i in reversed(range(last_step + 1)):
         if i == 0:
             for j in range(len(grid.grid[0])):
-                grid.grid[i][j].is_on = grid.grid[last_step - 1][j].is_on
+                grid.grid[i][j].is_on = grid.grid[last_step][j].is_on
         else:
             for j in range(len(grid.grid[0])):
                 grid.grid[i][j].is_on = grid.grid[i-1][j].is_on
@@ -638,7 +638,7 @@ while True:
                 
                 elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
                     if len(pressed_buttons) > 2:
-                        elif pressed_buttons[0] == SHIFT_LEFT:
+                        if pressed_buttons[0] == SHIFT_LEFT:
                             notes = shift_grid_left(notes)
                             shift = shift_grid_left(shift)
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
@@ -799,7 +799,7 @@ while True:
                 
                 elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
                     if len(pressed_buttons) > 2:
-                        elif pressed_buttons[0] == SHIFT_LEFT:
+                        if pressed_buttons[0] == SHIFT_LEFT:
                             notes = shift_grid_left(notes)
                             shift = shift_grid_left(shift)
                             reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
