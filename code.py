@@ -144,26 +144,26 @@ def press_to_light(button):
     return PRESS_TO_LIGHT[button[0]][button[1]]
 
 def handle_axis(mode, axis, up_cc, down_cc):
-    if mode == b'direct':
+    if mode == b'd':
         midi.send(ControlChange(up_cc, int(scale(axis, (-10, 10), (0, 127)))))
-    elif mode == b'flip':
+    elif mode == b'f':
         midi.send(ControlChange(up_cc, int(scale(axis, (10, -10), (0, 127)))))
-    elif mode == b'split':
+    elif mode == b's':
         if axis > 0:
             midi.send(ControlChange(up_cc, int(scale(axis, (0, 10), (0, 127)))))
         else:
             midi.send(ControlChange(down_cc, int(scale(axis, (0, -10), (0, 127)))))
-    elif mode == b'on_off':
+    elif mode == b'o':
         if axis > 0: #TODO is there a way to only send the cc on change?
             midi.send(ControlChange(up_cc, 127))
         else:
             midi.send(ControlChange(up_cc, 0))
-    elif mode == b'flip_on_off':
+    elif mode == b'fo':
         if axis > 0:
             midi.send(ControlChange(up_cc, 0))
         else:
             midi.send(ControlChange(up_cc, 127))
-    elif mode == b'split_on_off':
+    elif mode == b'so':
         if axis > 0:
             if axis > 5:
                 midi.send(ControlChange(up_cc, 127))
@@ -177,22 +177,22 @@ def handle_axis(mode, axis, up_cc, down_cc):
 
 def handle_cc_grid(cc_edit, modes, offset):
     for mode in modes:
-        if mode == b'direct':       cc_edit.grid[1][offset].is_on = True
-        if mode == b'flip':         cc_edit.grid[2][offset].is_on = True
-        if mode == b'split':        cc_edit.grid[3][offset].is_on = True
-        if mode == b'on_off':       cc_edit.grid[4][offset].is_on = True
-        if mode == b'flip_on_off':  cc_edit.grid[5][offset].is_on = True
-        if mode == b'split_on_off': cc_edit.grid[6][offset].is_on = True
+        if mode == b'd':       cc_edit.grid[1][offset].is_on = True
+        if mode == b'f':         cc_edit.grid[2][offset].is_on = True
+        if mode == b's':        cc_edit.grid[3][offset].is_on = True
+        if mode == b'o':       cc_edit.grid[4][offset].is_on = True
+        if mode == b'fo':  cc_edit.grid[5][offset].is_on = True
+        if mode == b'so': cc_edit.grid[6][offset].is_on = True
         if mode == None:            cc_edit.grid[7][offset].is_on = True
         offset -= 1
 
 def handle_select_mode(pressed_buttons):
-    if pressed_buttons[0][1] == 1: return b'direct'
-    if pressed_buttons[0][1] == 2: return b'flip'
-    if pressed_buttons[0][1] == 3: return b'split'
-    if pressed_buttons[0][1] == 4: return b'on_off'
-    if pressed_buttons[0][1] == 5: return b'flip_on_off'
-    if pressed_buttons[0][1] == 6: return b'split_on_off'
+    if pressed_buttons[0][1] == 1: return b'd'
+    if pressed_buttons[0][1] == 2: return b'f'
+    if pressed_buttons[0][1] == 3: return b's'
+    if pressed_buttons[0][1] == 4: return b'o'
+    if pressed_buttons[0][1] == 5: return b'fo'
+    if pressed_buttons[0][1] == 6: return b'so'
     else: return None
 
 def handle_cc_lights(pressed_buttons, cc_edit, row):
@@ -262,7 +262,7 @@ MANUAL_CC_COLOR        = (   0, 255,  63 )
 Grid Parameters
 """
 STARTING_NOTE     = const(36)
-NUMBER_OF_COLUMNS = const(32)
+NUMBER_OF_COLUMNS = const(16)
 NUMBER_OF_ROWS    = const(16)
 
 
@@ -692,9 +692,10 @@ while True:
                         with open("/save.json") as save:
                             data = loads(save.read())
                         with open("/save.json", "w") as save:
+                            
                             data["patterns"][current_pattern] = {
-                                "notes": list(map(lambda x: list(map(lambda y: y.is_on, x)), notes.grid)),
-                                "shift": list(map(lambda x: list(map(lambda y: y.is_on, x)), shift.grid)),
+                                "notes": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), notes.grid)),
+                                "shift": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), shift.grid)),
                                 "last_step": last_step,
                                 "axis_modes": [x_mode, y_mode, z_mode]
                             }
