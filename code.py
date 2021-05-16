@@ -2,7 +2,9 @@ from math import floor
 from board import ACCELEROMETER_SCL
 from board import ACCELEROMETER_SDA
 from busio import I2C
-import json
+from json import loads
+from json import dumps
+from gc import collect
 
 from usb_midi import ports
 from adafruit_trellism4 import TrellisM4Express
@@ -26,9 +28,10 @@ accelerometer = ADXL345(i2c)
 """
 
 class Grid:
+    __slots__ = ["grid"]
     def __init__(self, columns, rows, correction):
             index = 0
-            self.grid = []
+            grid = []
             for i in range(columns):
                 column = []
                 for j in range(rows):
@@ -36,12 +39,14 @@ class Grid:
                         index = 0
                     column.append(Cell(correct_index(index, i)))
                     index += 1
-                self.grid.append(column)
+                grid.append(tuple(column))
+            self.grid = tuple(grid)
 
 class NoteGrid:
+    __slots__ = ["grid"]
     def __init__(self, columns, rows, starting_note):
             index = 0
-            self.grid = []
+            grid = []
             for i in range(columns):
                 column = []
                 note = starting_note
@@ -51,9 +56,11 @@ class NoteGrid:
                     column.append(Note(note, correct_index(index, i)))
                     index += 1
                     note += 1
-                self.grid.append(column)
+                grid.append(tuple(column))
+            self.grid = tuple(grid)
 
 class Cell:
+    __slots__ = ["index", "is_on"]
     def __init__(self, index):
         self.index = index
         self.is_on = False
@@ -68,6 +75,7 @@ class Cell:
         self.is_on = False
 
 class Note(Cell):
+    __slots__ = ["notes", "index", "is_on", "isAccented"]
     def __init__(self, note, index):
         self.note = note
         self.index = index
@@ -98,7 +106,7 @@ def reset_colors(notes, note_on, note_off=(0, 0, 0), row_offset=0, column_offset
                 trellis.pixels._neopixel[note.index] = note_off
 
 def light_column(column, column_color):
-    for i in range(ROWS_ON_BOARD):
+    for i in range(4):
         trellis.pixels._neopixel[ column + (i*len(trellis._matrix.row_pins)) ] = column_color
     
 def reset_column(notes, offset, column, note_on, note_off, accent):
@@ -253,11 +261,9 @@ MANUAL_CC_COLOR        = (   0, 255,  63 )
 """
 Grid Parameters
 """
-starting_note     = 36
-NUMBER_OF_COLUMNS = 32
-NUMBER_OF_ROWS    = 16
-COLUMNS_ON_BOARD  = len(trellis._matrix.row_pins)
-ROWS_ON_BOARD     = len(trellis._matrix.col_pins)
+STARTING_NOTE     = const(36)
+NUMBER_OF_COLUMNS = const(32)
+NUMBER_OF_ROWS    = const(16)
 
 
 """
@@ -293,44 +299,44 @@ SELECT_PATTERN_MODE			 = [(3, 0), (0, 0), (3, 4)]
 """
 Integers
 """
-HOLD_TIME = 48 #in ticks
+HOLD_TIME = const(48) #in ticks
 
 """
 Axis cc's #TODO change these to CAPS
 """
-x_up_cc = 3
-x_down_cc = 9
-y_up_cc = 14
-y_down_cc = 15
-z_up_cc = 20
-z_down_cc = 21
+x_up_cc   = const(3)
+x_down_cc = const(9)
+y_up_cc   = const(14)
+y_down_cc = const(15)
+z_up_cc   = const(20)
+z_down_cc = const(21)
 
 """
 Lists
 """
-CORRECT_INDEX  =  [ 24, 16,  8, 0,
+CORRECT_INDEX  =  ( 24, 16,  8, 0,
                     25, 17,  9, 1,
                     26, 18, 10, 2,
                     27, 19, 11, 3,
                     28, 20, 12, 4,
                     29, 21, 13, 5,
                     30, 22, 14, 6,
-                    31, 23, 15, 7 ]
+                    31, 23, 15, 7 )
 
-PRESS_TO_LIGHT    = [ [ 24, 25, 26, 27, 28, 29, 30, 31 ],
-                      [ 16, 17, 18, 19, 20, 21, 22, 23 ],
-                      [  8,  9, 10, 11, 12, 13, 14, 15 ],
-                      [  0,  1,  2,  3,  4,  5,  6,  7 ] ]
+PRESS_TO_LIGHT    = ( ( 24, 25, 26, 27, 28, 29, 30, 31 ),
+                      ( 16, 17, 18, 19, 20, 21, 22, 23 ),
+                      (  8,  9, 10, 11, 12, 13, 14, 15 ),
+                      (  0,  1,  2,  3,  4,  5,  6,  7 ) )
 
-MANUAL_NOTES      = [ [ 48, 44, 40, 36 ],
-                      [ 49, 45, 41, 37 ],
-                      [ 50, 46, 42, 38 ],
-                      [ 51, 47, 43, 39 ] ]
+MANUAL_NOTES      = ( ( 48, 44, 40, 36 ),
+                      ( 49, 45, 41, 37 ),
+                      ( 50, 46, 42, 38 ),
+                      ( 51, 47, 43, 39 ) )
 
-MANUAL_CC         = [ [ 22, 23, 24, 25 ],
-                      [ 26, 27, 28, 29 ],
-                      [ 30, 31, 85, 86 ],
-                      [ 87, 88, 89, 90 ] ]
+MANUAL_CC         = ( ( 22, 23, 24, 25 ),
+                      ( 26, 27, 28, 29 ),
+                      ( 30, 31, 85, 86 ),
+                      ( 87, 88, 89, 90 ) )
 
 """
 ======== Global Variables ========
@@ -345,6 +351,7 @@ notes = None
 shift = None
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 
+
 #print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
 
 """
@@ -356,10 +363,10 @@ eighth_note = 0
 """
 Placeholders
 """
-old_message = 0 #TODO make these all None
-last_press = 0
-held_note = 0
-tick_placeholder = 0
+old_message = None
+last_press = None
+held_note = None
+tick_placeholder = None
 
 """
 Bools
@@ -404,10 +411,9 @@ toggled_cc = []
 
 try:
     with open("/save.json") as save:
-        pattern = json.loads(save.read())['patterns'][current_pattern]
-        print(pattern)
-        notes = pattern["notes"] if pattern["notes"] else NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, starting_note)
-        shift = pattern["shift"] if pattern["shift"] else NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, starting_note)
+        pattern = loads(save.read())['patterns'][current_pattern]
+        notes = pattern["notes"] if pattern["notes"] else NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
+        shift = pattern["shift"] if pattern["shift"] else NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
         last_step = pattern["last_step"] if pattern["last_step"] else 8
         if pattern["axis_modes"]:
             x_mode = pattern["axis_modes"][0]
@@ -415,6 +421,8 @@ try:
             z_mode = pattern["axis_modes"][2]
 except OSError as e:
     print(e)
+
+print(notes.grid)
 
 while True:
     
@@ -516,7 +524,7 @@ while True:
         if main_mode:
             if pressed_buttons and not combo_pressed:
                 for note in notes.grid[pressed_buttons[0][1] + column_offset]:
-                    if note.note == pressed_buttons[0][0] + starting_note + row_offset:
+                    if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
                         tick_placeholder = ticks
                         held_note = note
                         button_is_held = True
@@ -680,8 +688,20 @@ while True:
                  
                 elif pressed_buttons == SELECT_PATTERN_MODE:
                     try:
+                        data = None
                         with open("/save.json") as save:
-                            print(json.loads(save.read())['patterns'])
+                            data = loads(save.read())
+                        with open("/save.json", "w") as save:
+                            data["patterns"][current_pattern] = {
+                                "notes": list(map(lambda x: list(map(lambda y: y.is_on, x)), notes.grid)),
+                                "shift": list(map(lambda x: list(map(lambda y: y.is_on, x)), shift.grid)),
+                                "last_step": last_step,
+                                "axis_modes": [x_mode, y_mode, z_mode]
+                            }
+                            save.write(dumps(data))
+                            
+                            
+                            
                     except OSError as e:
                         print(e)
                 else:
@@ -697,7 +717,7 @@ while True:
         elif shift_mode:
             if pressed_buttons and not combo_pressed:
                 for note in shift.grid[pressed_buttons[0][1] + column_offset]:
-                    if note.note == pressed_buttons[0][0] + starting_note + row_offset:
+                    if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
                         tick_placeholder = ticks
                         held_note = note
                         button_is_held = True
