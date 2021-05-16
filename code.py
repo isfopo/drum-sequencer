@@ -144,26 +144,26 @@ def press_to_light(button):
     return PRESS_TO_LIGHT[button[0]][button[1]]
 
 def handle_axis(mode, axis, up_cc, down_cc):
-    if mode == 'direct':
+    if mode == b'direct':
         midi.send(ControlChange(up_cc, int(scale(axis, (-10, 10), (0, 127)))))
-    elif mode == 'flip':
+    elif mode == b'flip':
         midi.send(ControlChange(up_cc, int(scale(axis, (10, -10), (0, 127)))))
-    elif mode == 'split':
+    elif mode == b'split':
         if axis > 0:
             midi.send(ControlChange(up_cc, int(scale(axis, (0, 10), (0, 127)))))
         else:
             midi.send(ControlChange(down_cc, int(scale(axis, (0, -10), (0, 127)))))
-    elif mode == 'on_off':
+    elif mode == b'on_off':
         if axis > 0: #TODO is there a way to only send the cc on change?
             midi.send(ControlChange(up_cc, 127))
         else:
             midi.send(ControlChange(up_cc, 0))
-    elif mode == 'flip_on_off':
+    elif mode == b'flip_on_off':
         if axis > 0:
             midi.send(ControlChange(up_cc, 0))
         else:
             midi.send(ControlChange(up_cc, 127))
-    elif mode == 'split_on_off':
+    elif mode == b'split_on_off':
         if axis > 0:
             if axis > 5:
                 midi.send(ControlChange(up_cc, 127))
@@ -177,23 +177,23 @@ def handle_axis(mode, axis, up_cc, down_cc):
 
 def handle_cc_grid(cc_edit, modes, offset):
     for mode in modes:
-        if mode == 'direct':       cc_edit.grid[1][offset].is_on = True
-        if mode == 'flip':         cc_edit.grid[2][offset].is_on = True
-        if mode == 'split':        cc_edit.grid[3][offset].is_on = True
-        if mode == 'on_off':       cc_edit.grid[4][offset].is_on = True
-        if mode == 'flip_on_off':  cc_edit.grid[5][offset].is_on = True
-        if mode == 'split_on_off': cc_edit.grid[6][offset].is_on = True
-        if mode == 'none':         cc_edit.grid[7][offset].is_on = True
+        if mode == b'direct':       cc_edit.grid[1][offset].is_on = True
+        if mode == b'flip':         cc_edit.grid[2][offset].is_on = True
+        if mode == b'split':        cc_edit.grid[3][offset].is_on = True
+        if mode == b'on_off':       cc_edit.grid[4][offset].is_on = True
+        if mode == b'flip_on_off':  cc_edit.grid[5][offset].is_on = True
+        if mode == b'split_on_off': cc_edit.grid[6][offset].is_on = True
+        if mode == None:            cc_edit.grid[7][offset].is_on = True
         offset -= 1
 
 def handle_select_mode(pressed_buttons):
-    if pressed_buttons[0][1] == 1: return 'direct'
-    if pressed_buttons[0][1] == 2: return 'flip'
-    if pressed_buttons[0][1] == 3: return 'split'
-    if pressed_buttons[0][1] == 4: return 'on_off'
-    if pressed_buttons[0][1] == 5: return 'flip_on_off'
-    if pressed_buttons[0][1] == 6: return 'split_on_off'
-    else: return 'none'
+    if pressed_buttons[0][1] == 1: return b'direct'
+    if pressed_buttons[0][1] == 2: return b'flip'
+    if pressed_buttons[0][1] == 3: return b'split'
+    if pressed_buttons[0][1] == 4: return b'on_off'
+    if pressed_buttons[0][1] == 5: return b'flip_on_off'
+    if pressed_buttons[0][1] == 6: return b'split_on_off'
+    else: return None
 
 def handle_cc_lights(pressed_buttons, cc_edit, row):
     cc_edit.grid[pressed_buttons[0][1]][row].is_on = True
