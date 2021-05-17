@@ -6,6 +6,7 @@ from json import loads
 from json import dumps
 from gc import collect
 from os import listdir
+from os import remove
 
 from usb_midi import ports
 from adafruit_trellism4 import TrellisM4Express
@@ -239,6 +240,13 @@ def shift_grid_right(grid):
                 grid.grid[i][j].is_on = grid.grid[i-1][j].is_on
     return grid
 
+def get_slots():
+    return list(map(lambda x: int(x.replace('.json', '')), [file for file in listdir() if file.endswith('.json')]))
+
+def light_slots(slots, color):
+    for slot in slots:
+        trellis.pixels._neopixel[slot] = color
+                
 """
 ======== Constants ========
 """
@@ -258,7 +266,9 @@ MANUAL_NOTE_COLOR      = (   0, 255,   0 )
 MANUAL_NOTE_COLOR_ALT  = (   0, 191, 191 )
 RECORD_NOTE_COLOR      = ( 255,   0,   0 )
 MANUAL_CC_COLOR        = (   0, 255,  63 )
+CURRENT_SLOT_COLOR     = (  11, 255,  11 )
 SAVE_SLOT_COLOR		   = ( 191, 191,  11 )
+DELETE_SLOT_COLOR      = ( 191,  11,  11 )
 
 """
 Grid Parameters
@@ -297,6 +307,7 @@ LAST_STEP_EDIT_COMBO         = [(2, 7), (0, 7)]
 LAST_STEP_INCREASE	         = (1, 6)
 LAST_STEP_DECREASE           = (1, 4)
 SELECT_PATTERN_MODE			 = [(3, 0), (0, 0), (3, 4)]
+DELETE_PATTERN_MODE          = [(3, 0), (0, 0), (2, 4)]
 
 """
 Integers
@@ -422,7 +433,7 @@ try:
             x_mode = pattern["axis_modes"][0]
             y_mode = pattern["axis_modes"][1]
             z_mode = pattern["axis_modes"][2]
-except ValueError as e:
+except OSError as e:
     print(e)
 
 while True:
@@ -565,7 +576,11 @@ while True:
                     
                 elif pressed_buttons == SELECT_PATTERN_MODE:
                     mode = b'p'
-                    reset_colors(pattern_select, EDIT_CC_COLOR, NOTE_OFF, row_offset, column_offset)
+                    trellis.pixels.fill(NOTE_OFF)
+                    
+                elif pressed_buttons == DELETE_PATTERN_MODE:
+                    mode = b'd'
+                    trellis.pixels.fill(NOTE_OFF)
                 
                 elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
                     if len(pressed_buttons) > 2:
@@ -909,11 +924,10 @@ while True:
             Pattern Select Mode
             """
         elif mode == b'p':
-            save_slots = list(map(lambda x: int(x.replace('.json', '')), [file for file in listdir() if file.endswith('.json')]))
-            
-            for slot in save_slots:
-                trellis.pixels._neopixel[slot] = SAVE_SLOT_COLOR
-            
+            slots = get_slots()
+            light_slots(slots, SAVE_SLOT_COLOR)
+            trellis.pixels._neopixel[current_pattern] = CURRENT_SLOT_COLOR
+                
             if pressed_buttons and not combo_pressed:
                 try:
                     with open('{}.json'.format(current_pattern), "w") as file:
@@ -951,7 +965,21 @@ while True:
                 mode = b'm'
             if not pressed_buttons:
                 combo_pressed = False
-             
+        
+        elif mode == b'd':
+            slots = get_slots()
+            if slots:
+                light_slots(slots, DELETE_SLOT_COLOR)
+            else:
+                mode = b'm'
+                
+            if pressed_buttons and not combo_pressed and press_to_light(pressed_buttons[0]) in slots:
+                remove("/{}.json".format(press_to_light(pressed_buttons[0])))
+                mode = b'm'
+                
+            if not pressed_buttons:
+                combo_pressed = False
+                
     last_press = pressed_buttons
 
     """
