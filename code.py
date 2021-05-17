@@ -347,8 +347,8 @@ current_pattern = 0
 """
 Grid Objects
 """
-notes = None
-shift = None
+notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
+shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 
 
@@ -388,12 +388,7 @@ last_step = 8
 """
 Modes
 """
-main_mode = True
-shift_mode = False
-cc_edit_mode = False
-manual_note_mode = False
-manual_cc_mode = False
-
+mode = b'm'
 """
 Axis Modes
 """
@@ -410,19 +405,22 @@ toggled_cc = []
 
 
 try:
-    with open("/save.json") as save:
-        pattern = loads(save.read())['patterns'][current_pattern]
-        notes = pattern["notes"] if pattern["notes"] else NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
-        shift = pattern["shift"] if pattern["shift"] else NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
+    with open("/{}.json".format(current_pattern)) as save:
+        pattern = loads(save.read())
+        
+        if pattern["notes"]:
+            for column in range(len(pattern["notes"])):
+                for note in range(len(pattern["notes"][0])):
+                    notes.grid[column][note].is_on = pattern["notes"][column][note][0]
+                    notes.grid[column][note].isAccented = pattern["notes"][column][note][1]
+        
         last_step = pattern["last_step"] if pattern["last_step"] else 8
         if pattern["axis_modes"]:
             x_mode = pattern["axis_modes"][0]
             y_mode = pattern["axis_modes"][1]
             z_mode = pattern["axis_modes"][2]
-except OSError as e:
+except ValueError as e:
     print(e)
-
-print(notes.grid)
 
 while True:
     
@@ -446,7 +444,7 @@ while True:
             if ticks % 12 == 0:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step + 1 == i:
-                        if main_mode:
+                        if mode == b'm':
                             if i % 8 == 0:
                                 if column_offset == last_step+1 - 8:
                                     if i == 0:
@@ -474,7 +472,7 @@ while True:
             if ticks % 12 == 6:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step == i:
-                        if shift_mode:
+                        if mode == b's':
                             if i % 8 == 0:
                                 if column_offset == last_step - 8:
                                     if i == 0:
@@ -521,7 +519,7 @@ while True:
         """
         Main Mode
         """
-        if main_mode:
+        if mode == b'm':
             if pressed_buttons and not combo_pressed:
                 for note in notes.grid[pressed_buttons[0][1] + column_offset]:
                     if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
@@ -555,13 +553,11 @@ while True:
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons == SHIFT_MODE_COMBO:
-                    main_mode = False
-                    shift_mode = True
+                    mode = b's'
                     reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons == EDIT_CC_COMBO:
-                    main_mode = False
-                    edit_cc_mode = True
+                    mode = b'c'
                     reset_colors(cc_edit, EDIT_CC_COLOR, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
@@ -687,13 +683,10 @@ while True:
                             last_step = last_step - 1 if last_step > 1 else last_step
                  
                 elif pressed_buttons == SELECT_PATTERN_MODE:
+                    mode = b'p'
                     try:
-                        data = None
-                        with open("/save.json") as save:
-                            data = loads(save.read())
-                        with open("/save.json", "w") as save:
-                            
-                            data["patterns"][current_pattern] = {
+                        with open("/{}.json".format(current_pattern), "w") as save:
+                            data = {
                                 "notes": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), notes.grid)),
                                 "shift": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), shift.grid)),
                                 "last_step": last_step,
@@ -701,10 +694,11 @@ while True:
                             }
                             save.write(dumps(data))
                             
-                            
-                            
                     except OSError as e:
-                        print(e)
+                        open("/{}.json".format(current_pattern), "x")
+                    except MemoryError as e:
+                        mode = b'm'
+                        
                 else:
                     print(pressed_buttons)
                     
@@ -715,7 +709,7 @@ while True:
             """
             Shift Mode
             """
-        elif shift_mode:
+        elif mode == b's':
             if pressed_buttons and not combo_pressed:
                 for note in shift.grid[pressed_buttons[0][1] + column_offset]:
                     if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
@@ -744,8 +738,7 @@ while True:
             if len(pressed_buttons) > 1:
                 combo_pressed = True
                 if pressed_buttons == BACK_COMBO:
-                    main_mode = True
-                    shift_mode = False
+                    mode = b'm'
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons == CLEAR_COMBO:
@@ -880,10 +873,10 @@ while True:
                     
                 button_is_held = False
     
-            """
-            Edit CC Mode
-            """
-        elif edit_cc_mode:
+                """
+                Edit CC Mode
+                """
+        elif mode == b'c':
             handle_cc_grid(cc_edit, [x_mode, y_mode, z_mode], 2)
             reset_colors(cc_edit, EDIT_CC_COLOR)
             
@@ -912,14 +905,20 @@ while True:
             """
             if len(pressed_buttons) > 2:
                 if pressed_buttons == EDIT_CC_BACK:
-                    main_mode = True
-                    edit_cc_mode = False
+                    mode = b'm'
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 else:
                     print(pressed_buttons)
             if not pressed_buttons:
                 combo_pressed = False
-            
+                
+            """
+            Pattern Select Mode
+            """
+        elif mode == b'p':
+            if pressed_buttons:
+                print(press_to_light(pressed_buttons[0]))
+             
     last_press = pressed_buttons
 
     """
