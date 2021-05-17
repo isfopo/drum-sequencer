@@ -269,45 +269,47 @@ MANUAL_CC_COLOR        = (   0, 255,  63 )
 CURRENT_SLOT_COLOR     = (  11, 255,  11 )
 SAVE_SLOT_COLOR		   = ( 191, 191,  11 )
 DELETE_SLOT_COLOR      = ( 191,  11,  11 )
+YES_COLOR			   = (   0, 255,   0 )
+NO_COLOR			   = ( 255,   0,   0 )
 
 """
 Grid Parameters
 """
 STARTING_NOTE     = const(36)
 NUMBER_OF_COLUMNS = const(16)
-NUMBER_OF_ROWS    = const(4)
-
+NUMBER_OF_ROWS    = const(8)
 
 """
 Button Combonations
 """
-MANUAL_CC_COMBO              = [(3, 4), (0, 4)]
-MANUAL_NOTE_COMBO            = [(3, 4), (0, 5)]
-RECORD_NOTE_COMBO            = [(3, 5), (0, 5)]
-BACK_COMBO                   = [(3, 0), (0, 0), (3, 7)]
-CLEAR_COMBO                  = [(3, 0), (0, 0), (3, 1)]
-SHIFT_MODE_COMBO             = [(3, 0), (0, 0), (3, 2)]
-EDIT_CC_COMBO                = [(3, 0), (0, 0), (3, 3)]
-EDIT_CC_BACK                 = [(3, 0), (3, 1), (3, 7)]
-TOGGLE_X_COMBO               = [(2, 0), (0, 0), (2, 1)]
-TOGGLE_Y_COMBO               = [(2, 0), (0, 0), (2, 2)]
-TOGGLE_Z_COMBO               = [(2, 0), (0, 0), (2, 3)]
-OFFSET_CHANGE_MODE_COMBO	 = [(3, 6), (0, 6)]
-INCREASE_ROW_OFFSET          = (3, 4)
-DECREASE_ROW_OFFSET          = (1, 4)
-INCREASE_COLUMN_OFFSET       = (2, 5)
-DECREASE_COLUMN_OFFSET       = (2, 3)
-PATTERN_SHIFT_MODE_COMBO     = [(3, 7), (0, 7)]
-SHIFT_UP					 = (3, 5)
-SHIFT_DOWN                   = (1, 5)
-SHIFT_LEFT				     = (2, 4)
-SHIFT_RIGHT				     = (2, 6)
+MANUAL_CC_COMBO                  = [(3, 4), (0, 4)]
+MANUAL_NOTE_COMBO                = [(3, 4), (0, 5)]
+RECORD_NOTE_COMBO                = [(3, 5), (0, 5)]
+BACK_COMBO                       = [(3, 0), (0, 0), (3, 7)]
+CLEAR_COMBO                      = [(3, 0), (0, 0), (3, 1)]
+SHIFT_MODE_COMBO                 = [(3, 0), (0, 0), (3, 2)]
+EDIT_CC_COMBO                    = [(3, 0), (0, 0), (3, 3)]
+EDIT_CC_BACK                     = [(3, 0), (3, 1), (3, 7)]
+TOGGLE_X_COMBO                   = [(2, 0), (0, 0), (2, 1)]
+TOGGLE_Y_COMBO                   = [(2, 0), (0, 0), (2, 2)]
+TOGGLE_Z_COMBO                   = [(2, 0), (0, 0), (2, 3)]
+OFFSET_CHANGE_MODE_COMBO		 = [(3, 6), (0, 6)]
+INCREASE_ROW_OFFSET       	     = (3, 4)
+DECREASE_ROW_OFFSET         	 = (1, 4)
+INCREASE_COLUMN_OFFSET	     	 = (2, 5)
+DECREASE_COLUMN_OFFSET      	 = (2, 3)
+PATTERN_SHIFT_MODE_COMBO	     = [(3, 7), (0, 7)]
+SHIFT_UP			    		 = (3, 5)
+SHIFT_DOWN                       = (1, 5)
+SHIFT_LEFT	     			     = (2, 4)
+SHIFT_RIGHT				   	     = (2, 6)
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
-LAST_STEP_EDIT_COMBO         = [(2, 7), (0, 7)]
-LAST_STEP_INCREASE	         = (1, 6)
-LAST_STEP_DECREASE           = (1, 4)
-SELECT_PATTERN_MODE			 = [(3, 0), (0, 0), (3, 4)]
-DELETE_PATTERN_MODE          = [(3, 0), (0, 0), (2, 4)]
+LAST_STEP_EDIT_COMBO             = [(2, 7), (0, 7)]
+LAST_STEP_INCREASE	             = (1, 6)
+LAST_STEP_DECREASE               = (1, 4)
+SELECT_SLOT_MODE			     = [(3, 0), (0, 0), (3, 4)]
+DELETE_SLOT_MODE                 = [(3, 0), (0, 0), (2, 4)]
+DELETE_ALL_SLOTS_MODE            = [(3, 0), (0, 0), (1, 4)]
 
 """
 Integers
@@ -403,13 +405,13 @@ last_step = 8
 Modes
 """
 mode = b'm'
+
 """
 Axis Modes
 """
 x_mode = None
 y_mode = None
 z_mode = None
-
 
 manual_notes = []
 prev_manual_notes = []
@@ -434,6 +436,8 @@ try:
             y_mode = pattern["axis_modes"][1]
             z_mode = pattern["axis_modes"][2]
 except OSError as e:
+    print(e)
+except ValueError as e:
     print(e)
 
 while True:
@@ -574,12 +578,16 @@ while True:
                     mode = b'c'
                     reset_colors(cc_edit, EDIT_CC_COLOR, NOTE_OFF, row_offset, column_offset)
                     
-                elif pressed_buttons == SELECT_PATTERN_MODE:
+                elif pressed_buttons == SELECT_SLOT_MODE:
                     mode = b'p'
                     trellis.pixels.fill(NOTE_OFF)
                     
-                elif pressed_buttons == DELETE_PATTERN_MODE:
+                elif pressed_buttons == DELETE_SLOT_MODE:
                     mode = b'd'
+                    trellis.pixels.fill(NOTE_OFF)
+                    
+                elif pressed_buttons == DELETE_ALL_SLOTS_MODE:
+                    mode = b'da'
                     trellis.pixels.fill(NOTE_OFF)
                 
                 elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
@@ -959,9 +967,9 @@ while True:
                             z_mode = pattern["axis_modes"][2]
                 except OSError as e:
                     print(e)
+                except ValueError as e:
+                    remove("/{}.json".format(current_slot))
 
-                #then read data from file with the number of the pressed button
-                #then change current_slot to the number of the pressed button
                 mode = b'm'
             if not pressed_buttons:
                 combo_pressed = False
@@ -979,7 +987,26 @@ while True:
                 
             if not pressed_buttons:
                 combo_pressed = False
+        
+        elif mode == b'da':
+            for i in range(32):
+                trellis.pixels._neopixel[i] = YES_COLOR if i < 16 else NO_COLOR
+            
+            if pressed_buttons and not combo_pressed:
+                if press_to_light(pressed_buttons[0]) < 16:
+                    for i in range(32):
+                        try:
+                            remove("/{}.json".format(i))
+                        except OSError:
+                            pass
+                current_slot = 0
+                clear_grid(notes)
+                clear_grid(shift)
+                mode = b'm'
                 
+            if not pressed_buttons:
+                combo_pressed = False
+            
     last_press = pressed_buttons
 
     """
