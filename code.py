@@ -274,7 +274,7 @@ DELETE_SLOT_COLOR      = ( 191,  11,  11 )
 Grid Parameters
 """
 STARTING_NOTE     = const(36)
-NUMBER_OF_COLUMNS = const(8)
+NUMBER_OF_COLUMNS = const(16)
 NUMBER_OF_ROWS    = const(4)
 
 
@@ -355,7 +355,7 @@ MANUAL_CC         = ( ( 22, 23, 24, 25 ),
 ======== Global Variables ========
 """
 
-current_pattern = 0
+current_slot = 0
 
 """
 Grid Objects
@@ -419,7 +419,7 @@ toggled_cc = []
 
 
 try:
-    with open("/{}.json".format(current_pattern)) as save:
+    with open("/{}.json".format(current_slot)) as save:
         pattern = loads(save.read())
         
         if pattern["notes"]:
@@ -926,11 +926,11 @@ while True:
         elif mode == b'p':
             slots = get_slots()
             light_slots(slots, SAVE_SLOT_COLOR)
-            trellis.pixels._neopixel[current_pattern] = CURRENT_SLOT_COLOR
+            trellis.pixels._neopixel[current_slot] = CURRENT_SLOT_COLOR
                 
             if pressed_buttons and not combo_pressed:
                 try:
-                    with open('{}.json'.format(current_pattern), "w") as file:
+                    with open('{}.json'.format(current_slot), "w") as file:
                         file.write(dumps({
                             "notes": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), notes.grid)),
                             "shift": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), shift.grid)),
@@ -940,10 +940,10 @@ while True:
                 except MemoryError as e:
                     print(e)
                     
-                current_pattern = press_to_light(pressed_buttons[0])
+                current_slot = press_to_light(pressed_buttons[0])
                 
                 try:
-                    with open("/{}.json".format(current_pattern)) as save:
+                    with open("/{}.json".format(current_slot)) as save:
                         pattern = loads(save.read())
                         
                         if pattern["notes"]:
@@ -961,7 +961,7 @@ while True:
                     print(e)
 
                 #then read data from file with the number of the pressed button
-                #then change current_pattern to the number of the pressed button
+                #then change current_slot to the number of the pressed button
                 mode = b'm'
             if not pressed_buttons:
                 combo_pressed = False
