@@ -178,13 +178,13 @@ def handle_axis(mode, axis, up_cc, down_cc):
 
 def handle_cc_grid(cc_edit, modes, offset):
     for mode in modes:
-        if mode == b'd':       cc_edit.grid[1][offset].is_on = True
-        if mode == b'f':         cc_edit.grid[2][offset].is_on = True
-        if mode == b's':        cc_edit.grid[3][offset].is_on = True
-        if mode == b'o':       cc_edit.grid[4][offset].is_on = True
-        if mode == b'fo':  cc_edit.grid[5][offset].is_on = True
+        if mode == b'd':  cc_edit.grid[1][offset].is_on = True
+        if mode == b'f':  cc_edit.grid[2][offset].is_on = True
+        if mode == b's':  cc_edit.grid[3][offset].is_on = True
+        if mode == b'o':  cc_edit.grid[4][offset].is_on = True
+        if mode == b'fo': cc_edit.grid[5][offset].is_on = True
         if mode == b'so': cc_edit.grid[6][offset].is_on = True
-        if mode == None:            cc_edit.grid[7][offset].is_on = True
+        if mode == None:  cc_edit.grid[7][offset].is_on = True
         offset -= 1
 
 def handle_select_mode(pressed_buttons):
@@ -264,8 +264,8 @@ SAVE_SLOT_COLOR		   = ( 191, 191,  11 )
 Grid Parameters
 """
 STARTING_NOTE     = const(36)
-NUMBER_OF_COLUMNS = const(16)
-NUMBER_OF_ROWS    = const(16)
+NUMBER_OF_COLUMNS = const(8)
+NUMBER_OF_ROWS    = const(4)
 
 
 """
@@ -915,14 +915,42 @@ while True:
                 trellis.pixels._neopixel[slot] = SAVE_SLOT_COLOR
             
             if pressed_buttons and not combo_pressed:
-                #when button is pressed, save data to file with the name of current_pattern
+                try:
+                    with open('{}.json'.format(current_pattern), "w") as file:
+                        file.write(dumps({
+                            "notes": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), notes.grid)),
+                            "shift": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), shift.grid)),
+                            "last_step": last_step,
+                            "axis_modes": [x_mode, y_mode, z_mode]
+                        }))
+                except MemoryError as e:
+                    print(e)
+                    
+                current_pattern = press_to_light(pressed_buttons[0])
+                
+                try:
+                    with open("/{}.json".format(current_pattern)) as save:
+                        pattern = loads(save.read())
+                        
+                        if pattern["notes"]:
+                            for column in range(len(pattern["notes"])):
+                                for note in range(len(pattern["notes"][0])):
+                                    notes.grid[column][note].is_on = pattern["notes"][column][note][0]
+                                    notes.grid[column][note].isAccented = pattern["notes"][column][note][1]
+                        
+                        last_step = pattern["last_step"] if pattern["last_step"] else 8
+                        if pattern["axis_modes"]:
+                            x_mode = pattern["axis_modes"][0]
+                            y_mode = pattern["axis_modes"][1]
+                            z_mode = pattern["axis_modes"][2]
+                except OSError as e:
+                    print(e)
+
                 #then read data from file with the number of the pressed button
                 #then change current_pattern to the number of the pressed button
-                print(press_to_light(pressed_buttons[0]))
+                mode = b'm'
             if not pressed_buttons:
                 combo_pressed = False
-            if pressed_buttons == BACK_COMBO:
-                mode = b'm'
              
     last_press = pressed_buttons
 
