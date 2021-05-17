@@ -5,6 +5,7 @@ from busio import I2C
 from json import loads
 from json import dumps
 from gc import collect
+from os import listdir
 
 from usb_midi import ports
 from adafruit_trellism4 import TrellisM4Express
@@ -257,6 +258,7 @@ MANUAL_NOTE_COLOR      = (   0, 255,   0 )
 MANUAL_NOTE_COLOR_ALT  = (   0, 191, 191 )
 RECORD_NOTE_COLOR      = ( 255,   0,   0 )
 MANUAL_CC_COLOR        = (   0, 255,  63 )
+SAVE_SLOT_COLOR		   = ( 191, 191,  11 )
 
 """
 Grid Parameters
@@ -563,7 +565,6 @@ while True:
                     
                 elif pressed_buttons == SELECT_PATTERN_MODE:
                     mode = b'p'
-                    button_is_held = True
                     reset_colors(pattern_select, EDIT_CC_COLOR, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
@@ -908,8 +909,18 @@ while True:
             Pattern Select Mode
             """
         elif mode == b'p':
+            save_slots = list(map(lambda x: int(x.replace('.json', '')), [file for file in listdir() if file.endswith('.json')]))
+            
+            for slot in save_slots:
+                trellis.pixels._neopixel[slot] = SAVE_SLOT_COLOR
+            
             if pressed_buttons and not combo_pressed:
+                #when button is pressed, save data to file with the name of current_pattern
+                #then read data from file with the number of the pressed button
+                #then change current_pattern to the number of the pressed button
                 print(press_to_light(pressed_buttons[0]))
+            if not pressed_buttons:
+                combo_pressed = False
             if pressed_buttons == BACK_COMBO:
                 mode = b'm'
              
