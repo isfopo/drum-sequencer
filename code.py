@@ -7,6 +7,7 @@ from json import dumps
 from gc import collect
 from os import listdir
 from os import remove
+from micropython import const
 
 from usb_midi import ports
 from adafruit_trellism4 import TrellisM4Express
@@ -99,31 +100,25 @@ class Note(Cell):
 """
 ======== Fuctions ========
 """
-def reset_colors(notes, note_on, note_off=(0, 0, 0), row_offset=0, column_offset=0):
-    for column in notes.grid[column_offset:column_offset+8]:
-        for note in column[row_offset:row_offset+4]:
-            if note.is_on == True:
-                trellis.pixels._neopixel[note.index] = note_on
-            else:
-                trellis.pixels._neopixel[note.index] = note_off
+def reset_colors(nts, on, off=(0, 0, 0), row_offs=0, col_offs=0):
+    np = trellis.pixels._neopixel
+    for col in nts.grid[col_offs:col_offs+8]:
+        for nt in col[row_offs:row_offs+4]:
+            np[nt.index] = on if nt.is_on else off
 
-def light_column(column, column_color):
+def light_column(col, col_clr):
+    np = trellis.pixels._neopixel
     for i in range(4):
-        trellis.pixels._neopixel[ column + (i*len(trellis._matrix.row_pins)) ] = column_color
+        np[ col + (i*8) ] = col_clr
     
-def reset_column(notes, offset, column, note_on, note_off, accent):
-    for note in notes.grid[column][offset:offset+4]:
-        if note.is_on:
-            if note.is_accented:
-                trellis.pixels._neopixel[note.index] = accent
-            else:
-                trellis.pixels._neopixel[note.index] = note_on
-        else:
-            trellis.pixels._neopixel[note.index] = note_off
+def reset_column(nts, offs, col, on, off, acct):
+    np = trellis.pixels._neopixel
+    for nt in nts.grid[col][offs:offs+4]:
+        np[nt.index] = acct if nt.is_accented else on if nt.is_on else off
 
-def play_column(notes, column):
-    for note in notes.grid[column]:
-        note.play()
+def play_column(nts, col):
+    for nt in nts.grid[col]:
+        nt.play()
 
 def stop_notes(notes):
     map(lambda x: map(lambda y: y.stop(), x), notes.grid)
@@ -241,11 +236,12 @@ def shift_grid_right(grid):
     return grid
 
 def get_slots():
-    return list(map(lambda x: int(x.replace('.json', '')), [file for file in listdir() if file.endswith('.json')]))
+    return list(map(lambda f: int(f.replace('.json', '')), [f for f in listdir() if f.endswith('.json')]))
 
-def light_slots(slots, color):
-    for slot in slots:
-        trellis.pixels._neopixel[slot] = color
+def light_slots(sts, clr):
+    np = trellis.pixels._neopixel
+    for st in sts:
+        np[st] = clr
                 
 """
 ======== Constants ========
@@ -317,7 +313,7 @@ Integers
 HOLD_TIME = const(48) #in ticks
 
 """
-Axis cc's #TODO change these to CAPS
+Axis cc's
 """
 X_UP_CC   = const(3)
 X_DOWN_CC = const(9)
@@ -668,7 +664,7 @@ while True:
                             if button == (3, 5) or button == (0, 5):
                                 pass
                             else:
-                                manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button))
+                                manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button)) #ERROR if button pressed in on second half for board
                     else:
                         manual_notes = []
                     for note in manual_notes:
