@@ -40,7 +40,7 @@ class Grid:
                 for j in range(rows):
                     if j % 4 == 0:
                         index = 0
-                    column.append(Cell(correct_index(index, i)))
+                    column.append(Cell(correct_index(index, i, CORRECT_INDEX)))
                     index += 1
                 grid.append(tuple(column))
             self.grid = tuple(grid)
@@ -56,7 +56,7 @@ class NoteGrid:
                 for j in range(rows):
                     if j % 4 == 0:
                         index = 0
-                    column.append(Note(note, correct_index(index, i), send))
+                    column.append(Note(note, correct_index(index, i, CORRECT_INDEX), send))
                     index += 1
                     note += 1
                 grid.append(tuple(column))
@@ -122,6 +122,12 @@ def play_column(nts, col):
     r = range(len(col))
     for i in r:
         col[i].play()
+        
+def stop_column(nts, col):
+    col = tuple(nts.grid[col])
+    r = range(len(col))
+    for i in r:
+        col[i].stop()
 
 def move_column(grd, lst_stp, col_clr, on, acct, off=(0, 0, 0), row_offs=0, col_offs=0):
     if i % 8 == 0:
@@ -160,8 +166,8 @@ def scale(val, src, dst):
     if output > dst[1]: return dst[1]
     return output
 
-def correct_index(index, i):
-    return CORRECT_INDEX[index+((i%8)*4)]
+def correct_index(index, i, ci):
+    return ci[index+((i%8)*4)]
 
 def press_to_light(button, p2l):
     return p2l[button[0]][button[1]]
@@ -298,7 +304,7 @@ DECLINE_COLOR		   = ( 255,   0,   0 )
 Grid Parameters
 """
 STARTING_NOTE     = const(36)
-NUMBER_OF_COLUMNS = const(16)
+NUMBER_OF_COLUMNS = const(17)
 NUMBER_OF_ROWS    = const(8)
 
 """
@@ -487,6 +493,7 @@ while True:
                         if mode == b'm':
                             move_column(notes, last_step, COLUMN_COLOR, NOTE_ON, ACCENT, NOTE_OFF, row_offset, column_offset)
                         play_column(notes, i-1)
+                        stop_column(notes, i-2)
                 eighth_note += 1           
             """
             Shift Grid
@@ -497,6 +504,7 @@ while True:
                         if mode == b's':
                             move_column(shift, last_step, SHIFT_COLUMN_COLOR, SHIFT_NOTE_ON, SHIFT_ACCENT, SHIFT_NOTE_OFF, row_offset, column_offset)
                         play_column(shift, i-1)
+                        stop_column(shift, i-2)
             ticks += 1
             
         """
@@ -771,7 +779,7 @@ while True:
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
-                            if button == (3, 4) or button == (0, 4):
+                            if MANUAL_CC_COLOR.contains(button):
                                 pass
                             else:
                                 manual_cc.append((MANUAL_CC[button[0]][button[1]], button))
@@ -865,7 +873,7 @@ while True:
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO:
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == LAST_STEP_INCREASE:
-                            last_step = last_step + 1 if last_step < NUMBER_OF_COLUMNS else last_step
+                            last_step = last_step + 1 if last_step < NUMBER_OF_COLUMNS - 1 else last_step
                         if pressed_buttons[0] == LAST_STEP_DECREASE:
                             last_step = last_step - 1 if last_step > 1 else last_step
                             
