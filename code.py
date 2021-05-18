@@ -120,6 +120,29 @@ def play_column(nts, col):
     for nt in nts.grid[col]:
         nt.play()
 
+def move_column(grd, lst_stp, col_clr, on, acct, off=(0, 0, 0), row_offs=0, col_offs=0):
+    if i % 8 == 0:
+        if column_offset == lst_stp+1 - 8:
+            if i == 0:
+                light_column(7, col_clr)
+                reset_column(grd, row_offs, 6, on, off, acct)
+            
+        else:
+            if col_offs < i <= col_offs + 8:
+                light_column(7, col_clr)
+                reset_column(grd, row_offs, col_offs + 6, on, off, acct)
+    else:
+        if i % 8 == 1:
+            reset_column(grd, row_offs, col_offs + 7, on, off, acct)
+            
+        if col_offs <= i < col_offs + 8:
+            light_column((i-1)%8, col_clr)
+            reset_column(grd, row_offs, (i-2), on, off, acct)
+            
+    if i == 1:
+        reset_column(grd, row_offs, col_offs + 7, on, off, acct)
+        reset_column(grd, row_offs, (lst_stp-1)%8, on, off, acct)
+
 def stop_notes(notes):
     map(lambda x: map(lambda y: y.stop(), x), notes.grid)
 
@@ -459,25 +482,7 @@ while True:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step + 1 == i:
                         if mode == b'm':
-                            if i % 8 == 0:
-                                if column_offset == last_step+1 - 8:
-                                    if i == 0:
-                                        light_column(7, COLUMN_COLOR)
-                                        reset_column(notes, row_offset, 6, NOTE_ON, NOTE_OFF, ACCENT)
-                                    
-                                else:
-                                    if column_offset < i <= column_offset + 8:
-                                        light_column(7, COLUMN_COLOR)
-                                        reset_column(notes, row_offset, column_offset + 6, NOTE_ON, NOTE_OFF, ACCENT)
-                            else:
-                                if i % 8 == 1:
-                                    reset_column(notes, row_offset, column_offset + 7, NOTE_ON, NOTE_OFF, ACCENT)
-                                if column_offset <= i < column_offset + 8:
-                                    light_column((i-1)%8, COLUMN_COLOR)
-                                    reset_column(notes, row_offset, (i-2), NOTE_ON, NOTE_OFF, ACCENT)
-                            if i == 1:
-                                reset_column(notes, row_offset, column_offset + 7, NOTE_ON, NOTE_OFF, ACCENT)
-                                reset_column(notes, row_offset, (last_step-1)%8, NOTE_ON, NOTE_OFF, ACCENT)
+                            move_column(notes, last_step, COLUMN_COLOR, NOTE_ON, ACCENT, NOTE_OFF, row_offset, column_offset)
                         play_column(notes, i-1)
                 eighth_note += 1           
             """
@@ -487,23 +492,7 @@ while True:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step == i:
                         if mode == b's':
-                            if i % 8 == 0:
-                                if column_offset == last_step - 8:
-                                    if i == 0:
-                                        light_column(7, SHIFT_COLUMN_COLOR)
-                                        reset_column(shift, row_offset, 6, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
-                                else:
-                                    if column_offset < i <= column_offset + 8:
-                                        light_column(7, SHIFT_COLUMN_COLOR)
-                                        reset_column(shift, row_offset, column_offset + 6, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
-                            else:
-                                if i % 8 == 1:
-                                    reset_column(shift, row_offset, column_offset + 7, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
-                                if column_offset <= i < column_offset + 8:
-                                    light_column((i-1)%8, SHIFT_COLUMN_COLOR)
-                                    reset_column(shift, row_offset, (i-2), SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
-                            if i == 1:
-                                reset_column(shift, row_offset, column_offset + 7, SHIFT_NOTE_ON, NOTE_OFF, SHIFT_ACCENT)
+                            move_column(shift, last_step, SHIFT_COLUMN_COLOR, SHIFT_NOTE_ON, SHIFT_ACCENT, SHIFT_NOTE_OFF, row_offset, column_offset)
                         play_column(shift, i-1)
             ticks += 1
             
