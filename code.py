@@ -163,8 +163,8 @@ def scale(val, src, dst):
 def correct_index(index, i):
     return CORRECT_INDEX[index+((i%8)*4)]
 
-def press_to_light(button):
-    return PRESS_TO_LIGHT[button[0]][button[1]]
+def press_to_light(button, p2l):
+    return p2l[button[0]][button[1]]
 
 def handle_axis(mode, axis, up_cc, down_cc):
     if mode == b'd':
@@ -336,7 +336,7 @@ DELETE_ALL_SLOTS_MODE            = [(3, 0), (0, 0), (1, 4)]
 """
 Integers
 """
-HOLD_TIME = const(48) #in ticks
+HOLD_TIME = const(24) #in ticks
 
 """
 Axis cc's
@@ -388,7 +388,6 @@ notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send)
 shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send)
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 pattern_select = Grid(8, 4, CORRECT_INDEX)
-
 
 #print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
 
@@ -599,7 +598,7 @@ while True:
                     
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
-                        trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                        trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
@@ -613,21 +612,21 @@ while True:
                         if cc not in prev_manual_cc:
                             if cc[1][0] <= 1:
                                 midi.send(ControlChange(cc[0], 127))
-                                trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                                trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                             if cc[1][0] >= 2:
                                 if cc not in toggled_cc:
                                     toggled_cc.append(cc)
                                     midi.send(ControlChange(cc[0], 127))
-                                    trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                                    trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                                 else:
                                     toggled_cc.remove(cc)
                                     midi.send(ControlChange(cc[0], 0))
-                                    trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
+                                    trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     for cc in prev_manual_cc:
                         if cc not in manual_cc:
                             if cc[1][0] <=1:
                                 midi.send(ControlChange(cc[0], 0))
-                                trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
+                                trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_cc = manual_cc
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
@@ -643,11 +642,11 @@ while True:
                     for note in manual_notes:
                         if note not in prev_manual_notes:
                             midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
+                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
+                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_notes = manual_notes
                     
                 elif pressed_buttons[-2:] == RECORD_NOTE_COMBO: 
@@ -673,11 +672,11 @@ while True:
                                         grid_note.is_on = True
                             if round(column_now) - column_now < 0:
                                 midi.send(NoteOn(note[0], 127))
-                            trellis.pixels._neopixel[press_to_light(note[1])] = RECORD_NOTE_COLOR
+                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = RECORD_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0))
-                            trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
+                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
@@ -768,7 +767,7 @@ while True:
 
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
-                        trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                        trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
@@ -782,21 +781,21 @@ while True:
                         if cc not in prev_manual_cc:
                             if cc[1][0] <= 1:
                                 midi.send(ControlChange(cc[0], 127))
-                                trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                                trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                             if cc[1][0] >= 2:
                                 if cc not in toggled_cc:
                                     toggled_cc.append(cc)
                                     midi.send(ControlChange(cc[0], 127))
-                                    trellis.pixels._neopixel[press_to_light(cc[1])] = MANUAL_CC_COLOR
+                                    trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                                 else:
                                     toggled_cc.remove(cc)
                                     midi.send(ControlChange(cc[0], 0))
-                                    trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
+                                    trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     for cc in prev_manual_cc:
                         if cc not in manual_cc:
                             if cc[1][0] <=1:
                                 midi.send(ControlChange(cc[0], 0))
-                                trellis.pixels._neopixel[press_to_light(cc[1])] = NOTE_OFF
+                                trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_cc = manual_cc
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
@@ -812,11 +811,11 @@ while True:
                     for note in manual_notes:
                         if note not in prev_manual_notes:
                             midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1])] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
+                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
+                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons[-2:] == RECORD_NOTE_COMBO: 
@@ -842,11 +841,11 @@ while True:
                                         grid_note.is_on = True
                             if round(column_now) - column_now < 0:
                                 midi.send(NoteOn(note[0], 127))
-                            trellis.pixels._neopixel[press_to_light(note[1])] = RECORD_NOTE_COLOR
+                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = RECORD_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0))
-                            trellis.pixels._neopixel[press_to_light(note[1])] = NOTE_OFF
+                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
@@ -937,7 +936,7 @@ while True:
                 except MemoryError as e:
                     print(e)
                     
-                current_slot = press_to_light(pressed_buttons[0])
+                current_slot = press_to_light(pressed_buttons[0], PRESS_TO_LIGHT)
                 
                 try:
                     with open("/{}.json".format(current_slot)) as save:
@@ -970,8 +969,8 @@ while True:
             else:
                 mode = b'm'
                 
-            if pressed_buttons and not combo_pressed and press_to_light(pressed_buttons[0]) in slots:
-                remove("/{}.json".format(press_to_light(pressed_buttons[0])))
+            if pressed_buttons and not combo_pressed and press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) in slots:
+                remove("/{}.json".format(press_to_light(pressed_buttons[0], PRESS_TO_LIGHT)))
                 mode = b'm'
                 
             if not pressed_buttons:
@@ -982,7 +981,7 @@ while True:
                 trellis.pixels._neopixel[i] = CONFIRM_COLOR if i < 16 else DECLINE_COLOR
             
             if pressed_buttons and not combo_pressed:
-                if press_to_light(pressed_buttons[0]) < 16:
+                if press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) < 16:
                     for i in range(32):
                         try:
                             remove("/{}.json".format(i))
