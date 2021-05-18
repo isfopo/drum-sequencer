@@ -47,7 +47,7 @@ class Grid:
 
 class NoteGrid:
     __slots__ = ["grid"]
-    def __init__(self, columns, rows, starting_note):
+    def __init__(self, columns, rows, starting_note, send):
             index = 0
             grid = []
             for i in range(columns):
@@ -56,7 +56,7 @@ class NoteGrid:
                 for j in range(rows):
                     if j % 4 == 0:
                         index = 0
-                    column.append(Note(note, correct_index(index, i)))
+                    column.append(Note(note, correct_index(index, i), send))
                     index += 1
                     note += 1
                 grid.append(tuple(column))
@@ -78,21 +78,22 @@ class Cell:
         self.is_on = False
 
 class Note(Cell):
-    __slots__ = ["notes", "index", "is_on", "is_accented"]
-    def __init__(self, note, index):
+    __slots__ = ["notes", "index", "is_on", "is_accented", "send"]
+    def __init__(self, note, index, send):
         self.note = note
         self.index = index
         self.is_on = False
         self.is_accented = False
+        self.send = send
         
     def play(self):
         self.stop()
         if self.is_on:
-            midi.send(NoteOn(self.note, 127 if self.is_accented else 96))
+            self.send(NoteOn(self.note, 127 if self.is_accented else 96))
         
     def stop(self):
         if self.is_on:
-            midi.send(NoteOff(self.note, 0))
+            self.send(NoteOff(self.note, 0))
         
     def toggle_accent(self):
         self.is_accented = True if not self.is_accented else False
@@ -117,8 +118,10 @@ def reset_column(nts, offs, col, on, off, acct):
         np[nt.index] = acct if nt.is_accented else on if nt.is_on else off
 
 def play_column(nts, col):
-    for nt in nts.grid[col]:
-        nt.play()
+    col = tuple(nts.grid[col])
+    r = range(len(col))
+    for i in r:
+        col[i].play()
 
 def move_column(grd, lst_stp, col_clr, on, acct, off=(0, 0, 0), row_offs=0, col_offs=0):
     if i % 8 == 0:
@@ -381,8 +384,8 @@ current_slot = 0
 """
 Grid Objects
 """
-notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
-shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE)
+notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send)
+shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send)
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 pattern_select = Grid(8, 4, CORRECT_INDEX)
 
@@ -401,6 +404,7 @@ Placeholders
 old_message = None
 last_press = None
 held_note = None
+last_tick = None
 tick_placeholder = None
 
 """
@@ -997,7 +1001,9 @@ while True:
     """
     ======== Send Axis CC ========
     """
-    if on:
+    if on and not ticks == last_tick:
         handle_axis(x_mode, accelerometer.acceleration[1], X_UP_CC, X_DOWN_CC)
         handle_axis(y_mode, accelerometer.acceleration[0], Y_UP_CC, Y_DOWN_CC)
         handle_axis(z_mode, accelerometer.acceleration[2], Z_UP_CC, Z_DOWN_CC)
+        
+    last_tick = ticks
