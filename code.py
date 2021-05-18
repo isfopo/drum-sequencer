@@ -77,24 +77,24 @@ class Cell:
         self.is_on = False
 
 class Note(Cell):
-    __slots__ = ["notes", "index", "is_on", "isAccented"]
+    __slots__ = ["notes", "index", "is_on", "is_accented"]
     def __init__(self, note, index):
         self.note = note
         self.index = index
         self.is_on = False
-        self.isAccented = False
+        self.is_accented = False
         
     def play(self):
         self.stop()
         if self.is_on:
-            midi.send(NoteOn(self.note, 127 if self.isAccented else 96))
+            midi.send(NoteOn(self.note, 127 if self.is_accented else 96))
         
     def stop(self):
         if self.is_on:
             midi.send(NoteOff(self.note, 0))
         
     def toggle_accent(self):
-        self.isAccented = True if not self.isAccented else False
+        self.is_accented = True if not self.is_accented else False
 
 """
 ======== Fuctions ========
@@ -114,7 +114,7 @@ def light_column(column, column_color):
 def reset_column(notes, offset, column, note_on, note_off, accent):
     for note in notes.grid[column][offset:offset+4]:
         if note.is_on:
-            if note.isAccented:
+            if note.is_accented:
                 trellis.pixels._neopixel[note.index] = accent
             else:
                 trellis.pixels._neopixel[note.index] = note_on
@@ -156,7 +156,7 @@ def handle_axis(mode, axis, up_cc, down_cc):
         else:
             midi.send(ControlChange(down_cc, int(scale(axis, (0, -10), (0, 127)))))
     elif mode == b'o':
-        if axis > 0: #TODO is there a way to only send the cc on change?
+        if axis > 0:
             midi.send(ControlChange(up_cc, 127))
         else:
             midi.send(ControlChange(up_cc, 0))
@@ -269,8 +269,8 @@ MANUAL_CC_COLOR        = (   0, 255,  63 )
 CURRENT_SLOT_COLOR     = (  11, 255,  11 )
 SAVE_SLOT_COLOR		   = ( 191, 191,  11 )
 DELETE_SLOT_COLOR      = ( 191,  11,  11 )
-YES_COLOR			   = (   0, 255,   0 )
-NO_COLOR			   = ( 255,   0,   0 )
+CONFIRM_COLOR		   = (   0, 255,   0 )
+DECLINE_COLOR		   = ( 255,   0,   0 )
 
 """
 Grid Parameters
@@ -319,12 +319,12 @@ HOLD_TIME = const(48) #in ticks
 """
 Axis cc's #TODO change these to CAPS
 """
-x_up_cc   = const(3)
-x_down_cc = const(9)
-y_up_cc   = const(14)
-y_down_cc = const(15)
-z_up_cc   = const(20)
-z_down_cc = const(21)
+X_UP_CC   = const(3)
+X_DOWN_CC = const(9)
+Y_UP_CC   = const(14)
+Y_DOWN_CC = const(15)
+Z_UP_CC   = const(20)
+Z_DOWN_CC = const(21)
 
 """
 Lists
@@ -428,7 +428,7 @@ try:
             for column in range(len(pattern["notes"])):
                 for note in range(len(pattern["notes"][0])):
                     notes.grid[column][note].is_on = pattern["notes"][column][note][0]
-                    notes.grid[column][note].isAccented = pattern["notes"][column][note][1]
+                    notes.grid[column][note].is_accented = pattern["notes"][column][note][1]
         
         last_step = pattern["last_step"] if pattern["last_step"] else 8
         if pattern["axis_modes"]:
@@ -549,12 +549,12 @@ while True:
                 if ticks - tick_placeholder < HOLD_TIME:
                     trellis.pixels._neopixel[held_note.index] = NOTE_ON if not held_note.is_on else NOTE_OFF
                     held_note.toggle() #TODO somehting is slow here - there is a slight delay when a new note is added
-                    if held_note.isAccented:
+                    if held_note.is_accented:
                         held_note.toggle_accent()
                     button_is_held = False
                 else:
                     if not held_note.is_on:
-                        trellis.pixels._neopixel[held_note.index] = ACCENT if not held_note.isAccented else NOTE_OFF
+                        trellis.pixels._neopixel[held_note.index] = ACCENT if not held_note.is_accented else NOTE_OFF
                         held_note.toggle()
                     held_note.toggle_accent()
             if not pressed_buttons:
@@ -734,12 +734,12 @@ while True:
                 if ticks - tick_placeholder < HOLD_TIME:
                     trellis.pixels._neopixel[held_note.index] = SHIFT_NOTE_ON if not held_note.is_on else NOTE_OFF
                     held_note.toggle()
-                    if held_note.isAccented:
+                    if held_note.is_accented:
                         held_note.toggle_accent()
                     button_is_held = False
                 else:
                     if not held_note.is_on:
-                        trellis.pixels._neopixel[held_note.index] = SHIFT_ACCENT if not held_note.isAccented else NOTE_OFF
+                        trellis.pixels._neopixel[held_note.index] = SHIFT_ACCENT if not held_note.is_accented else NOTE_OFF
                         held_note.toggle()
                     held_note.toggle_accent()
             if not pressed_buttons:
@@ -940,8 +940,8 @@ while True:
                 try:
                     with open('{}.json'.format(current_slot), "w") as file:
                         file.write(dumps({
-                            "notes": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), notes.grid)),
-                            "shift": list(map(lambda x: list(map(lambda y: (y.is_on, y.isAccented), x)), shift.grid)),
+                            "notes": list(map(lambda x: list(map(lambda y: (y.is_on, y.is_accented), x)), notes.grid)),
+                            "shift": list(map(lambda x: list(map(lambda y: (y.is_on, y.is_accented), x)), shift.grid)),
                             "last_step": last_step,
                             "axis_modes": [x_mode, y_mode, z_mode]
                         }))
@@ -958,7 +958,7 @@ while True:
                             for column in range(len(pattern["notes"])):
                                 for note in range(len(pattern["notes"][0])):
                                     notes.grid[column][note].is_on = pattern["notes"][column][note][0]
-                                    notes.grid[column][note].isAccented = pattern["notes"][column][note][1]
+                                    notes.grid[column][note].is_accented = pattern["notes"][column][note][1]
                         
                         last_step = pattern["last_step"] if pattern["last_step"] else 8
                         if pattern["axis_modes"]:
@@ -990,7 +990,7 @@ while True:
         
         elif mode == b'da':
             for i in range(32):
-                trellis.pixels._neopixel[i] = YES_COLOR if i < 16 else NO_COLOR
+                trellis.pixels._neopixel[i] = CONFIRM_COLOR if i < 16 else DECLINE_COLOR
             
             if pressed_buttons and not combo_pressed:
                 if press_to_light(pressed_buttons[0]) < 16:
@@ -1013,6 +1013,6 @@ while True:
     ======== Send Axis CC ========
     """
     if on:
-        handle_axis(x_mode, accelerometer.acceleration[1], x_up_cc, x_down_cc)
-        handle_axis(y_mode, accelerometer.acceleration[0], y_up_cc, y_down_cc)
-        handle_axis(z_mode, accelerometer.acceleration[2], z_up_cc, z_down_cc)
+        handle_axis(x_mode, accelerometer.acceleration[1], X_UP_CC, X_DOWN_CC)
+        handle_axis(y_mode, accelerometer.acceleration[0], Y_UP_CC, Y_DOWN_CC)
+        handle_axis(z_mode, accelerometer.acceleration[2], Z_UP_CC, Z_DOWN_CC)
