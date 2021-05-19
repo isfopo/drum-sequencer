@@ -22,6 +22,7 @@ from adafruit_midi.note_on import NoteOn
 from adafruit_midi.control_change import ControlChange
 
 midi = MIDI(midi_in=ports[0], midi_out=ports[1], in_channel=0, out_channel=0)
+receive = midi.receive
 trellis = TrellisM4Express(rotation=90)
 i2c = I2C(ACCELEROMETER_SCL, ACCELEROMETER_SDA)
 accelerometer = ADXL345(i2c)
@@ -38,8 +39,7 @@ class Grid:
             for i in range(columns):
                 column = []
                 for j in range(rows):
-                    if j % 4 == 0:
-                        index = 0
+                    if j % 4 == 0: index = 0
                     column.append(Cell(correct_index(index, i, CORRECT_INDEX)))
                     index += 1
                 grid.append(tuple(column))
@@ -54,8 +54,7 @@ class NoteGrid:
                 column = []
                 note = starting_note
                 for j in range(rows):
-                    if j % 4 == 0:
-                        index = 0
+                    if j % 4 == 0: index = 0
                     column.append(Note(note, correct_index(index, i, CORRECT_INDEX), send))
                     index += 1
                     note += 1
@@ -301,7 +300,7 @@ def handle_last_step_edit(lst_stp, pb, inc, de, cols): #TODO have a way to chang
     if     pb == inc: return lst_stp + 1 if lst_stp < cols - 1 else lst_stp
     elif   pb == de:  return lst_stp - 1 if lst_stp > 1 else lst_stp
     else:             return lst_stp
-                
+
 """
 ======== Constants ========
 """
@@ -423,7 +422,6 @@ held_note = None
 last_tick = None
 tick_placeholder = None
 
-on = False
 button_is_held = False
 combo_pressed = False
 manual_is_pressed = False
@@ -449,13 +447,13 @@ while True:
     """
     Receive MIDI
     """
-    new_message = midi.receive()
+    new_message = receive()
     if new_message != old_message and new_message != None:
 
         """
         Sync To TimingClock
         """
-        if isinstance(new_message, TimingClock) and on:
+        if isinstance(new_message, TimingClock):
             """
             Main Grid
             """
@@ -483,12 +481,10 @@ while True:
         Start and Stop
         """
         if isinstance(new_message, Start):
-            on = True
             ticks = 0
             eighth_note = 0
             
         if isinstance(new_message, Stop):
-            on = False
             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
             stop_notes(notes)
 
