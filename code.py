@@ -174,35 +174,35 @@ def press_to_light(button, p2l):
 
 def handle_axis(mode, axis, up_cc, down_cc, s, cc):
     if mode == b'd':
-        s(ControlChange(up_cc, int(scale(axis, (-10, 10), (0, 127)))))
+        s(cc(up_cc, int(scale(axis, (-10, 10), (0, 127)))))
     elif mode == b'f':
-        s(ControlChange(up_cc, int(scale(axis, (10, -10), (0, 127)))))
+        s(cc(up_cc, int(scale(axis, (10, -10), (0, 127)))))
     elif mode == b's':
         if axis > 0:
-            s(ControlChange(up_cc, int(scale(axis, (0, 10), (0, 127)))))
+            s(cc(up_cc, int(scale(axis, (0, 10), (0, 127)))))
         else:
-            s(ControlChange(down_cc, int(scale(axis, (0, -10), (0, 127)))))
+            s(cc(down_cc, int(scale(axis, (0, -10), (0, 127)))))
     elif mode == b'o':
         if axis > 0:
-            s(ControlChange(up_cc, 127))
+            s(cc(up_cc, 127))
         else:
-            s(ControlChange(up_cc, 0))
+            s(cc(up_cc, 0))
     elif mode == b'fo':
         if axis > 0:
-            s(ControlChange(up_cc, 0))
+            s(cc(up_cc, 0))
         else:
-            s(ControlChange(up_cc, 127))
+            s(cc(up_cc, 127))
     elif mode == b'so':
         if axis > 0:
             if axis > 5:
-                s(ControlChange(up_cc, 127))
+                s(cc(up_cc, 127))
             else:
-                s(ControlChange(up_cc, 0))
+                s(cc(up_cc, 0))
         else:    
             if axis < -5:
-                s(ControlChange(down_cc, 127))
+                s(cc(down_cc, 127))
             else:
-                s(ControlChange(down_cc, 0))
+                s(cc(down_cc, 0))
 
 def handle_axes(modes, ticks, last_tick, accel, ccs, cc):
     if not ticks == last_tick:
@@ -272,6 +272,18 @@ def shift_grid_right(grid):
             for j in range(len(grid.grid[0])):
                 grid.grid[i][j].is_on = grid.grid[i-1][j].is_on
     return grid
+
+def write_save(notes, shift, last_step, axis_modes):
+    try:
+        with open('{}.json'.format(current_slot), "w") as file:
+            file.write(dumps({
+                "notes": list(map(lambda x: list(map(lambda y: (y.is_on, y.is_accented), x)), notes.grid)),
+                "shift": list(map(lambda x: list(map(lambda y: (y.is_on, y.is_accented), x)), shift.grid)),
+                "last_step": last_step,
+                "axis_modes": axis_modes
+            }))
+    except MemoryError as e:
+        print(e)
 
 def read_save(current_slot, notes, shift):
     try:
@@ -892,7 +904,7 @@ while True:
                 Edit CC Mode
                 """
         elif mode == b'c':
-            handle_cc_grid(cc_edit, [x_mode, y_mode, z_mode], 2)
+            handle_cc_grid(cc_edit, axis_modes, 2)
             reset_colors(cc_edit, EDIT_CC_COLOR)
             
             if pressed_buttons and not combo_pressed:
@@ -901,19 +913,19 @@ while True:
                     pass
                 
                 elif pressed_buttons[0][0] == 2:
-                    x_mode = handle_select_mode(pressed_buttons)
+                    axis_modes[0] = handle_select_mode(pressed_buttons)
                     row_off(cc_edit, 2)
                     handle_cc_lights(pressed_buttons, cc_edit, 2)
                     reset_colors(cc_edit, EDIT_CC_COLOR)
 
                 elif pressed_buttons[0][0] == 1:
-                    y_mode = handle_select_mode(pressed_buttons)
+                    axis_modes[1] = handle_select_mode(pressed_buttons)
                     row_off(cc_edit, 1)
                     handle_cc_lights(pressed_buttons, cc_edit, 1)
                     reset_colors(cc_edit, EDIT_CC_COLOR)
                     
                 elif pressed_buttons[0][0] == 0:
-                    z_mode = handle_select_mode(pressed_buttons)
+                    axis_modes[2] = handle_select_mode(pressed_buttons)
                     row_off(cc_edit, 0)
                     handle_cc_lights(pressed_buttons, cc_edit, 0)
                     reset_colors(cc_edit, EDIT_CC_COLOR)
@@ -939,22 +951,11 @@ while True:
             trellis.pixels._neopixel[current_slot] = CURRENT_SLOT_COLOR
                 
             if pressed_buttons and not combo_pressed:
-                try:
-                    with open('{}.json'.format(current_slot), "w") as file:
-                        file.write(dumps({
-                            "notes": list(map(lambda x: list(map(lambda y: (y.is_on, y.is_accented), x)), notes.grid)),
-                            "shift": list(map(lambda x: list(map(lambda y: (y.is_on, y.is_accented), x)), shift.grid)),
-                            "last_step": last_step,
-                            "axis_modes": axis_modes
-                        }))
-                except MemoryError as e:
-                    print(e)
-                    
+                write_save(notes, shift, last_step, axis_modes)
                 current_slot = press_to_light(pressed_buttons[0], PRESS_TO_LIGHT)
-                
                 [ notes, shift, last_step, axis_modes ] = read_save(current_slot, notes, shift)
-
                 mode = b'm'
+                
             if not pressed_buttons:
                 combo_pressed = False
         
