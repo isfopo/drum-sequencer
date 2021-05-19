@@ -296,11 +296,16 @@ def get_slots():
 def light_slots(sts, clr, np):
     for st in sts: np[st] = clr
     
-def handle_last_step_edit(lst_stp, pb, inc, de, cols): #TODO have a way to change this a whole measure at once
+def handle_last_step_edit(lst_stp, pb, inc, de, cols): #FEAT have a way to change this a whole measure at once
     if     pb == inc: return lst_stp + 1 if lst_stp < cols - 1 else lst_stp
     elif   pb == de:  return lst_stp - 1 if lst_stp > 1 else lst_stp
     else:             return lst_stp
 
+def fill_yes_no(conf_clr, dcln_clr, np):
+    r = range(32)
+    for i in r:
+        np[i] = conf_clr if i < 16 else dcln_clr
+        
 """
 ======== Constants ========
 """
@@ -348,18 +353,18 @@ TOGGLE_X_COMBO                   = [(2, 0), (0, 0), (2, 1)]
 TOGGLE_Y_COMBO                   = [(2, 0), (0, 0), (2, 2)]
 TOGGLE_Z_COMBO                   = [(2, 0), (0, 0), (2, 3)]
 OFFSET_CHANGE_MODE_COMBO		 = [(3, 6), (0, 6)]
-INCREASE_ROW_OFFSET       	     = (3, 4)
+INCREASE_ROW_OFFSET       	     = (3, 4) #TODO these can be combined into one tuple
 DECREASE_ROW_OFFSET         	 = (1, 4)
 INCREASE_COLUMN_OFFSET	     	 = (2, 5)
 DECREASE_COLUMN_OFFSET      	 = (2, 3)
 PATTERN_SHIFT_MODE_COMBO	     = [(3, 7), (0, 7)]
-SHIFT_UP			    		 = (3, 5)
+SHIFT_UP			    		 = (3, 5) #TODO these can be combined into one tuple
 SHIFT_DOWN                       = (1, 5)
 SHIFT_LEFT	     			     = (2, 4)
 SHIFT_RIGHT				   	     = (2, 6)
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
 LAST_STEP_EDIT_COMBO             = [(2, 7), (0, 7)]
-LAST_STEP_INCREASE	             = (1, 6)
+LAST_STEP_INCREASE	             = (1, 6) #TODO these can be combined into one tuple
 LAST_STEP_DECREASE               = (1, 4)
 SELECT_SLOT_MODE			     = [(3, 0), (0, 0), (3, 4)]
 DELETE_SLOT_MODE                 = [(3, 0), (0, 0), (2, 4)]
@@ -554,7 +559,7 @@ while True:
                     mode = b'da'
                     trellis.pixels.fill(NOTE_OFF)
                 
-                elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
+                elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == INCREASE_ROW_OFFSET:
                             row_offset = increase_row_offset(row_offset)
@@ -578,7 +583,7 @@ while True:
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
-                            if button == (3, 4) or button == (0, 4):
+                            if button == (3, 4) or button == (0, 4):#TODO use variables
                                 pass
                             else:
                                 manual_cc.append((MANUAL_CC[button[0]][button[1]], button))
@@ -609,7 +614,7 @@ while True:
                     if len(pressed_buttons) > 2:
                         manual_notes = []
                         for button in pressed_buttons:
-                            if button == (3, 4) or button == (0, 5):
+                            if button == (3, 4) or button == (0, 5): #TODO use variables
                                 pass
                             else:
                                 manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button))
@@ -629,7 +634,7 @@ while True:
                     if len(pressed_buttons) > 2:
                         manual_notes = []
                         for button in pressed_buttons:
-                            if button == (3, 5) or button == (0, 5):
+                            if button == (3, 5) or button == (0, 5): #TODO use variables
                                 pass
                             else:
                                 manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button)) #ERROR if button pressed in on second half for board
@@ -658,7 +663,7 @@ while True:
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
                     seperate_manual_note_channel = False if seperate_manual_note_channel else True
                 
-                elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
+                elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == SHIFT_LEFT:
                             notes = shift_grid_left(notes)
@@ -669,7 +674,7 @@ while True:
                             shift = shift_grid_right(shift)
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
-                elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO:
+                elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == LAST_STEP_INCREASE:
                             last_step = last_step + 1 if last_step < NUMBER_OF_COLUMNS else last_step
@@ -686,7 +691,7 @@ while True:
             """
             Shift Mode
             """
-        elif mode == b's':
+        elif mode == b's': #TODO all this "shift code" could be the same as "main code" with "or" statement
             if pressed_buttons and not combo_pressed:
                 for note in shift.grid[pressed_buttons[0][1] + column_offset]:
                     if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
@@ -714,7 +719,7 @@ while True:
             """
             if len(pressed_buttons) > 1:
                 combo_pressed = True
-                if pressed_buttons == BACK_COMBO:
+                if pressed_buttons == BACK_COMBO: #TODO don't use back combo, use the same combo as to get there
                     mode = b'm'
                     reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
@@ -925,8 +930,7 @@ while True:
             Delete All Pattern Mode
             """
         elif mode == b'da':
-            for i in range(32):
-                trellis.pixels._neopixel[i] = CONFIRM_COLOR if i < 16 else DECLINE_COLOR
+            fill_yes_no(CONFIRM_COLOR, DECLINE_COLOR, trellis.pixels._neopixel)
             
             if pressed_buttons and not combo_pressed:
                 if press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) < 16:
