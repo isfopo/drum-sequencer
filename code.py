@@ -305,7 +305,13 @@ def fill_yes_no(conf_clr, dcln_clr, np):
     r = range(32)
     for i in r:
         np[i] = conf_clr if i < 16 else dcln_clr
-        
+
+def delete_all_slots():
+    for i in range(32):
+        try: remove("/{}.json".format(i))
+        except OSError: pass
+
+    
 """
 ======== Constants ========
 """
@@ -934,14 +940,10 @@ while True:
             
             if pressed_buttons and not combo_pressed:
                 if press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) < 16:
-                    for i in range(32):
-                        try:
-                            remove("/{}.json".format(i))
-                        except OSError:
-                            pass
-                current_slot = 0
-                clear_grid(notes)
-                clear_grid(shift)
+                    delete_all_slots()
+                    current_slot = 0
+                    clear_grid(notes)
+                    clear_grid(shift)
                 mode = b'm'
                 
             if not pressed_buttons:
