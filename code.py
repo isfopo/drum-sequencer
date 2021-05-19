@@ -99,7 +99,7 @@ class Note(Cell):
         self.is_accented = True if not self.is_accented else False
 
 """
-======== Fuctions ========
+======== Fuctions ======== #TODO can these functions be imported from a .mpy file?
 """
 def reset_colors(nts, on, off=(0, 0, 0), row_offs=0, col_offs=0):
     np = trellis.pixels._neopixel
@@ -294,8 +294,7 @@ def read_save(curr_slt, nts, shft):
 def get_slots():
     return list(map(lambda f: int(f.replace('.json', '')), [f for f in listdir() if f.endswith('.json')]))
 
-def light_slots(sts, clr):
-    np = trellis.pixels._neopixel
+def light_slots(sts, clr, np):
     for st in sts: np[st] = clr
     
 def handle_last_step_edit(lst_stp, pb, inc, de, cols): #TODO have a way to change this a whole measure at once
@@ -409,7 +408,7 @@ MANUAL_CC         = ( ( 22, 23, 24, 25 ),
 """
 current_slot = 0
 [ notes, shift, last_step, axis_modes ] = read_save(current_slot, NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send), NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send))
-
+#TODO can notes and shift be combined into a single tuple?
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 pattern_select = Grid(8, 4, CORRECT_INDEX)
 
@@ -899,7 +898,7 @@ while True:
             """
         elif mode == b'p':
             slots = get_slots()
-            light_slots(slots, SAVE_SLOT_COLOR)
+            light_slots(slots, SAVE_SLOT_COLOR, trellis.pixels._neopixel)
             trellis.pixels._neopixel[current_slot] = CURRENT_SLOT_COLOR
                 
             if pressed_buttons and not combo_pressed:
@@ -916,7 +915,7 @@ while True:
             """
         elif mode == b'd':
             slots = get_slots()
-            if slots: light_slots(slots, DELETE_SLOT_COLOR)
+            if slots: light_slots(slots, DELETE_SLOT_COLOR, trellis.pixels._neopixel)
             else: mode = b'm'
                 
             if pressed_buttons and not combo_pressed and press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) in slots:
