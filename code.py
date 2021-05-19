@@ -162,9 +162,9 @@ def clear_grid(notes):
             
 def scale(val, src, dst):
     output = ((val - src[0]) / (src[1]-src[0])) * (dst[1]-dst[0]) + dst[0]
-    if output < dst[0]: return dst[0]
-    if output > dst[1]: return dst[1]
-    return output
+    if output < dst[0]: return int(dst[0])
+    if output > dst[1]: return int(dst[1])
+    return int(output)
 
 def correct_index(index, i, ci):
     return ci[index+((i%8)*4)]
@@ -173,36 +173,24 @@ def press_to_light(button, p2l):
     return p2l[button[0]][button[1]]
 
 def handle_axis(mode, axis, up_cc, down_cc, s, cc):
-    if mode == b'd':
-        s(cc(up_cc, int(scale(axis, (-10, 10), (0, 127)))))
-    elif mode == b'f':
-        s(cc(up_cc, int(scale(axis, (10, -10), (0, 127)))))
+    if   mode == b'd': s(cc(up_cc, scale(axis, (-10, 10), (0, 127))))
+    elif mode == b'f': s(cc(up_cc, scale(axis, (10, -10), (0, 127))))
     elif mode == b's':
-        if axis > 0:
-            s(cc(up_cc, int(scale(axis, (0, 10), (0, 127)))))
-        else:
-            s(cc(down_cc, int(scale(axis, (0, -10), (0, 127)))))
+        if axis > 0: s(cc(  up_cc, scale(axis, (0, 10), (0, 127))))
+        else:        s(cc(down_cc, scale(axis, (0, -10), (0, 127))))
     elif mode == b'o':
-        if axis > 0:
-            s(cc(up_cc, 127))
-        else:
-            s(cc(up_cc, 0))
+        if axis > 0: s(cc(up_cc, 127))
+        else:        s(cc(up_cc, 0))
     elif mode == b'fo':
-        if axis > 0:
-            s(cc(up_cc, 0))
-        else:
-            s(cc(up_cc, 127))
+        if axis > 0: s(cc(up_cc, 0))
+        else:        s(cc(up_cc, 127))
     elif mode == b'so':
         if axis > 0:
-            if axis > 5:
-                s(cc(up_cc, 127))
-            else:
-                s(cc(up_cc, 0))
+            if axis > 5: s(cc(up_cc, 127))
+            else:        s(cc(up_cc, 0))
         else:    
-            if axis < -5:
-                s(cc(down_cc, 127))
-            else:
-                s(cc(down_cc, 0))
+            if axis < -5: s(cc(down_cc, 127))
+            else:         s(cc(down_cc, 0))
 
 def handle_axes(modes, ticks, last_tick, accel, ccs, cc):
     if not ticks == last_tick:
@@ -310,7 +298,7 @@ def light_slots(sts, clr):
     np = trellis.pixels._neopixel
     for st in sts: np[st] = clr
     
-def handle_last_step_edit(lst_stp, pb, inc, de, cols):
+def handle_last_step_edit(lst_stp, pb, inc, de, cols): #TODO have a way to change this a whole measure at once
     if     pb == inc: return lst_stp + 1 if lst_stp < cols - 1 else lst_stp
     elif   pb == de:  return lst_stp - 1 if lst_stp > 1 else lst_stp
     else:             return lst_stp
@@ -422,48 +410,29 @@ MANUAL_CC         = ( ( 22, 23, 24, 25 ),
 current_slot = 0
 [ notes, shift, last_step, axis_modes ] = read_save(current_slot, NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send), NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send))
 
-"""
-Grid Objects
-"""
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 pattern_select = Grid(8, 4, CORRECT_INDEX)
 
 #print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
 
-"""
-Counters
-"""
 ticks = 0
 eighth_note = 0
 
-"""
-Placeholders
-"""
 old_message = None
 last_press = None
 held_note = None
 last_tick = None
 tick_placeholder = None
 
-"""
-Bools
-"""
 on = False
 button_is_held = False
 combo_pressed = False
 manual_is_pressed = False
-
 seperate_manual_note_channel = False
 
-"""
-Offset
-"""
 row_offset = 0
 column_offset = 0
 
-"""
-Modes
-"""
 mode = b'm'
 
 manual_notes = []
