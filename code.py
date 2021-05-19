@@ -208,13 +208,13 @@ def handle_cc_grid(cc_edit, modes, offset):
         if mode == None:  cc_edit.grid[7][offset].is_on = True
         offset -= 1
 
-def handle_select_mode(pressed_buttons):
-    if pressed_buttons[0][1] == 1: return b'd'
-    if pressed_buttons[0][1] == 2: return b'f'
-    if pressed_buttons[0][1] == 3: return b's'
-    if pressed_buttons[0][1] == 4: return b'o'
-    if pressed_buttons[0][1] == 5: return b'fo'
-    if pressed_buttons[0][1] == 6: return b'so'
+def handle_select_mode(pb):
+    if   pb == 1: return b'd'
+    elif pb == 2: return b'f'
+    elif pb == 3: return b's'
+    elif pb == 4: return b'o'
+    elif pb == 5: return b'fo'
+    elif pb == 6: return b'so'
     else: return None
 
 def handle_cc_lights(pressed_buttons, cc_edit, row):
@@ -307,7 +307,8 @@ def fill_yes_no(conf_clr, dcln_clr, np):
         np[i] = conf_clr if i < 16 else dcln_clr
 
 def delete_all_slots():
-    for i in range(32):
+    r = range(32)
+    for i in r:
         try: remove("/{}.json".format(i))
         except OSError: pass
 
@@ -871,19 +872,19 @@ while True:
                     pass
                 
                 elif pressed_buttons[0][0] == 2:
-                    axis_modes[0] = handle_select_mode(pressed_buttons)
+                    axis_modes[0] = handle_select_mode(pressed_buttons[0][1])
                     row_off(cc_edit, 2)
                     handle_cc_lights(pressed_buttons, cc_edit, 2)
                     reset_colors(cc_edit, EDIT_CC_COLOR)
 
                 elif pressed_buttons[0][0] == 1:
-                    axis_modes[1] = handle_select_mode(pressed_buttons)
+                    axis_modes[1] = handle_select_mode(pressed_buttons[0][1])
                     row_off(cc_edit, 1)
                     handle_cc_lights(pressed_buttons, cc_edit, 1)
                     reset_colors(cc_edit, EDIT_CC_COLOR)
                     
                 elif pressed_buttons[0][0] == 0:
-                    axis_modes[2] = handle_select_mode(pressed_buttons)
+                    axis_modes[2] = handle_select_mode(pressed_buttons[0][1])
                     row_off(cc_edit, 0)
                     handle_cc_lights(pressed_buttons, cc_edit, 0)
                     reset_colors(cc_edit, EDIT_CC_COLOR)
