@@ -309,6 +309,11 @@ def get_slots():
 def light_slots(sts, clr):
     np = trellis.pixels._neopixel
     for st in sts: np[st] = clr
+    
+def handle_last_step_edit(lst_stp, pb, inc, de, cols):
+    if     pb == inc: return lst_stp + 1 if lst_stp < cols - 1 else lst_stp
+    elif   pb == de:  return lst_stp - 1 if lst_stp > 1 else lst_stp
+    else:             return lst_stp
                 
 """
 ======== Constants ========
@@ -414,8 +419,8 @@ MANUAL_CC         = ( ( 22, 23, 24, 25 ),
 """
 ======== Global Variables ========
 """
-
 current_slot = 0
+[ notes, shift, last_step, axis_modes ] = read_save(current_slot, NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send), NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send))
 
 """
 Grid Objects
@@ -466,8 +471,6 @@ prev_manual_notes = []
 manual_cc = []
 prev_manual_cc = []
 toggled_cc = []
-
-[ notes, shift, last_step, axis_modes ] = read_save(current_slot, NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send), NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send))
 
 while True:
     
@@ -873,10 +876,7 @@ while True:
                 
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO:
                     if len(pressed_buttons) > 2:
-                        if pressed_buttons[0] == LAST_STEP_INCREASE:
-                            last_step = last_step + 1 if last_step < NUMBER_OF_COLUMNS - 1 else last_step
-                        if pressed_buttons[0] == LAST_STEP_DECREASE:
-                            last_step = last_step - 1 if last_step > 1 else last_step
+                        last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_INCREASE, LAST_STEP_DECREASE, NUMBER_OF_COLUMNS)
                             
                 else:
                     print(pressed_buttons)
