@@ -156,8 +156,7 @@ def stop_notes(notes):
 
 def clear_grid(notes):
     for column in notes.grid:
-        for note in column:
-            note.is_on = False
+        for note in column: note.is_on = False
             
 def scale(val, src, dst):
     output = ((val - src[0]) / (src[1]-src[0])) * (dst[1]-dst[0]) + dst[0]
@@ -191,11 +190,10 @@ def handle_axis(mode, axis, up_cc, down_cc, s, cc):
             if axis < -5: s(cc(down_cc, 127))
             else:         s(cc(down_cc, 0))
 
-def handle_axes(modes, ticks, last_tick, accel, ccs, cc):
-    if not ticks == last_tick:
-        handle_axis(modes[0], accel[1], ccs[0], ccs[1], midi.send, cc)
-        handle_axis(modes[1], accel[0], ccs[2], ccs[3], midi.send, cc)
-        handle_axis(modes[2], accel[2], ccs[4], ccs[5], midi.send, cc)
+def handle_axes(modes, accel, ccs, cc):    
+    handle_axis(modes[0], accel[1], ccs[0], ccs[1], midi.send, cc)
+    handle_axis(modes[1], accel[0], ccs[2], ccs[3], midi.send, cc)
+    handle_axis(modes[2], accel[2], ccs[4], ccs[5], midi.send, cc)
 
 def handle_cc_grid(cc_edit, modes, offset):
     for mode in modes:
@@ -955,6 +953,7 @@ while True:
     """
     ======== Send Axes CC ========
     """
-    handle_axes(axis_modes, ticks, last_tick, accelerometer.acceleration, axis_ccs, ControlChange)
+    if not ticks == last_tick:
+        handle_axes(axis_modes, accelerometer.acceleration, axis_ccs, ControlChange)
         
     last_tick = ticks
