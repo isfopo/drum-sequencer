@@ -172,37 +172,43 @@ def correct_index(index, i, ci):
 def press_to_light(button, p2l):
     return p2l[button[0]][button[1]]
 
-def handle_axis(mode, axis, up_cc, down_cc):
+def handle_axis(mode, axis, up_cc, down_cc, s, cc):
     if mode == b'd':
-        midi.send(ControlChange(up_cc, int(scale(axis, (-10, 10), (0, 127)))))
+        s(ControlChange(up_cc, int(scale(axis, (-10, 10), (0, 127)))))
     elif mode == b'f':
-        midi.send(ControlChange(up_cc, int(scale(axis, (10, -10), (0, 127)))))
+        s(ControlChange(up_cc, int(scale(axis, (10, -10), (0, 127)))))
     elif mode == b's':
         if axis > 0:
-            midi.send(ControlChange(up_cc, int(scale(axis, (0, 10), (0, 127)))))
+            s(ControlChange(up_cc, int(scale(axis, (0, 10), (0, 127)))))
         else:
-            midi.send(ControlChange(down_cc, int(scale(axis, (0, -10), (0, 127)))))
+            s(ControlChange(down_cc, int(scale(axis, (0, -10), (0, 127)))))
     elif mode == b'o':
         if axis > 0:
-            midi.send(ControlChange(up_cc, 127))
+            s(ControlChange(up_cc, 127))
         else:
-            midi.send(ControlChange(up_cc, 0))
+            s(ControlChange(up_cc, 0))
     elif mode == b'fo':
         if axis > 0:
-            midi.send(ControlChange(up_cc, 0))
+            s(ControlChange(up_cc, 0))
         else:
-            midi.send(ControlChange(up_cc, 127))
+            s(ControlChange(up_cc, 127))
     elif mode == b'so':
         if axis > 0:
             if axis > 5:
-                midi.send(ControlChange(up_cc, 127))
+                s(ControlChange(up_cc, 127))
             else:
-                midi.send(ControlChange(up_cc, 0))
+                s(ControlChange(up_cc, 0))
         else:    
             if axis < -5:
-                midi.send(ControlChange(down_cc, 127))
+                s(ControlChange(down_cc, 127))
             else:
-                midi.send(ControlChange(down_cc, 0))
+                s(ControlChange(down_cc, 0))
+
+def handle_axes(modes, ticks, last_tick, accel, ccs, cc):
+    if not ticks == last_tick:
+        handle_axis(modes[0], accel[1], ccs[0], ccs[1], midi.send, cc)
+        handle_axis(modes[1], accel[0], ccs[2], ccs[3], midi.send, cc)
+        handle_axis(modes[2], accel[2], ccs[4], ccs[5], midi.send, cc)
 
 def handle_cc_grid(cc_edit, modes, offset):
     for mode in modes:
@@ -267,6 +273,32 @@ def shift_grid_right(grid):
                 grid.grid[i][j].is_on = grid.grid[i-1][j].is_on
     return grid
 
+def read_save(current_slot, notes, shift):
+    try:
+        with open("/{}.json".format(current_slot)) as save:
+            pattern = loads(save.read())
+            
+            if pattern["notes"]:
+                for column in range(len(pattern["notes"])):
+                    for note in range(len(pattern["notes"][0])):
+                        notes.grid[column][note].is_on = pattern["notes"][column][note][0]
+                        notes.grid[column][note].is_accented = pattern["notes"][column][note][1]
+                        
+            if pattern["shift"]:
+                for column in range(len(pattern["shift"])):
+                    for note in range(len(pattern["shift"][0])):
+                        shift.grid[column][note].is_on = pattern["shift"][column][note][0]
+                        shift.grid[column][note].is_accented = pattern["shift"][column][note][1]
+            
+            last_step = pattern["last_step"] if pattern["last_step"] else 8
+            axis_modes = pattern["axis_modes"] if pattern["axis_modes"] else [ None, None, None ]
+        return [ notes, shift, last_step, axis_modes ]
+    except OSError as e:
+        print(e)
+    except ValueError as e:
+        print(e)
+        return [ notes, shift, 8, [ None, None, None ] ]
+        
 def get_slots():
     return list(map(lambda f: int(f.replace('.json', '')), [f for f in listdir() if f.endswith('.json')]))
 
@@ -347,12 +379,7 @@ HOLD_TIME = const(24) #in ticks
 """
 Axis cc's
 """
-X_UP_CC   = const(3)
-X_DOWN_CC = const(9)
-Y_UP_CC   = const(14)
-Y_DOWN_CC = const(15)
-Z_UP_CC   = const(20)
-Z_DOWN_CC = const(21)
+axis_ccs = (3, 9, 14, 15, 20, 21)
 
 """
 Lists
@@ -437,36 +464,15 @@ mode = b'm'
 """
 Axis Modes
 """
-x_mode = None
-y_mode = None
-z_mode = None
+axis_modes = [ None, None, None ]
 
 manual_notes = []
 prev_manual_notes = []
 manual_cc = []
 prev_manual_cc = []
 toggled_cc = []
-
-
-try:
-    with open("/{}.json".format(current_slot)) as save:
-        pattern = loads(save.read())
         
-        if pattern["notes"]:
-            for column in range(len(pattern["notes"])):
-                for note in range(len(pattern["notes"][0])):
-                    notes.grid[column][note].is_on = pattern["notes"][column][note][0]
-                    notes.grid[column][note].is_accented = pattern["notes"][column][note][1]
-        
-        last_step = pattern["last_step"] if pattern["last_step"] else 8
-        if pattern["axis_modes"]:
-            x_mode = pattern["axis_modes"][0]
-            y_mode = pattern["axis_modes"][1]
-            z_mode = pattern["axis_modes"][2]
-except OSError as e:
-    print(e)
-except ValueError as e:
-    print(e)
+print( read_save(current_slot, notes, shift) )
 
 while True:
     
@@ -939,37 +945,22 @@ while True:
                             "notes": list(map(lambda x: list(map(lambda y: (y.is_on, y.is_accented), x)), notes.grid)),
                             "shift": list(map(lambda x: list(map(lambda y: (y.is_on, y.is_accented), x)), shift.grid)),
                             "last_step": last_step,
-                            "axis_modes": [x_mode, y_mode, z_mode]
+                            "axis_modes": axis_modes
                         }))
                 except MemoryError as e:
                     print(e)
                     
                 current_slot = press_to_light(pressed_buttons[0], PRESS_TO_LIGHT)
                 
-                try:
-                    with open("/{}.json".format(current_slot)) as save:
-                        pattern = loads(save.read())
-                        
-                        if pattern["notes"]:
-                            for column in range(len(pattern["notes"])):
-                                for note in range(len(pattern["notes"][0])):
-                                    notes.grid[column][note].is_on = pattern["notes"][column][note][0]
-                                    notes.grid[column][note].is_accented = pattern["notes"][column][note][1]
-                        
-                        last_step = pattern["last_step"] if pattern["last_step"] else 8
-                        if pattern["axis_modes"]:
-                            x_mode = pattern["axis_modes"][0]
-                            y_mode = pattern["axis_modes"][1]
-                            z_mode = pattern["axis_modes"][2]
-                except OSError as e:
-                    print(e)
-                except ValueError as e:
-                    remove("/{}.json".format(current_slot))
+                [ notes, shift, last_step, axis_modes ] = read_save(current_slot, notes, shift)
 
                 mode = b'm'
             if not pressed_buttons:
                 combo_pressed = False
         
+            """
+            Pattern Delete Mode
+            """
         elif mode == b'd':
             slots = get_slots()
             if slots:
@@ -984,6 +975,9 @@ while True:
             if not pressed_buttons:
                 combo_pressed = False
         
+            """
+            Delete All Pattern Mode
+            """
         elif mode == b'da':
             for i in range(32):
                 trellis.pixels._neopixel[i] = CONFIRM_COLOR if i < 16 else DECLINE_COLOR
@@ -1006,11 +1000,8 @@ while True:
     last_press = pressed_buttons
 
     """
-    ======== Send Axis CC ========
+    ======== Send Axes CC ========
     """
-    if on and not ticks == last_tick:
-        handle_axis(x_mode, accelerometer.acceleration[1], X_UP_CC, X_DOWN_CC)
-        handle_axis(y_mode, accelerometer.acceleration[0], Y_UP_CC, Y_DOWN_CC)
-        handle_axis(z_mode, accelerometer.acceleration[2], Z_UP_CC, Z_DOWN_CC)
+    handle_axes(axis_modes, ticks, last_tick, accelerometer.acceleration, axis_ccs, ControlChange)
         
     last_tick = ticks
