@@ -964,10 +964,8 @@ while True:
             """
         elif mode == b'd':
             slots = get_slots()
-            if slots:
-                light_slots(slots, DELETE_SLOT_COLOR)
-            else:
-                mode = b'm'
+            if slots: light_slots(slots, DELETE_SLOT_COLOR)
+            else: mode = b'm'
                 
             if pressed_buttons and not combo_pressed and press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) in slots:
                 remove("/{}.json".format(press_to_light(pressed_buttons[0], PRESS_TO_LIGHT)))
