@@ -134,7 +134,7 @@ def move_column(grd, lst_stp, col_clr, on, acct, off=(0, 0, 0), row_offs=0, col_
         if column_offset == lst_stp+1 - 8:
             if i == 0:
                 light_column(7, col_clr)
-                reset_column(grd, row_offs, 6, on, off, acct)
+                reset_column(grd, row_offs, 6, on, off, acct) #BUG last column hangs up in shift mode
             
         else:
             if col_offs < i <= col_offs + 8:
@@ -285,39 +285,30 @@ def write_save(notes, shift, last_step, axis_modes):
     except MemoryError as e:
         print(e)
 
-def read_save(current_slot, notes, shift):
+def read_save(curr_slt, nts, shft):
     try:
-        with open("/{}.json".format(current_slot)) as save:
+        with open("/{}.json".format(curr_slt)) as save:
             pattern = loads(save.read())
-            
             if pattern["notes"]:
                 for column in range(len(pattern["notes"])):
                     for note in range(len(pattern["notes"][0])):
-                        notes.grid[column][note].is_on = pattern["notes"][column][note][0]
-                        notes.grid[column][note].is_accented = pattern["notes"][column][note][1]
-                        
-            if pattern["shift"]:
-                for column in range(len(pattern["shift"])):
-                    for note in range(len(pattern["shift"][0])):
-                        shift.grid[column][note].is_on = pattern["shift"][column][note][0]
-                        shift.grid[column][note].is_accented = pattern["shift"][column][note][1]
+                        nts.grid[column][note].is_on = pattern["notes"][column][note][0]
+                        nts.grid[column][note].is_accented = pattern["notes"][column][note][1]
+                        shft.grid[column][note].is_on = pattern["shift"][column][note][0]
+                        shft.grid[column][note].is_accented = pattern["shift"][column][note][1]
             
-            last_step = pattern["last_step"] if pattern["last_step"] else 8
-            axis_modes = pattern["axis_modes"] if pattern["axis_modes"] else [ None, None, None ]
-        return [ notes, shift, last_step, axis_modes ]
-    except OSError as e:
-        print(e)
-    except ValueError as e:
-        print(e)
-        return [ notes, shift, 8, [ None, None, None ] ]
+            lst_stp = pattern["last_step"] if pattern["last_step"] else 8
+            ax_mds = pattern["axis_modes"] if pattern["axis_modes"] else [ None, None, None ]
+        return [ nts, shft, lst_stp, ax_mds ]
+    except:
+        return [ nts, shft, 8, [ None, None, None ] ]
         
 def get_slots():
     return list(map(lambda f: int(f.replace('.json', '')), [f for f in listdir() if f.endswith('.json')]))
 
 def light_slots(sts, clr):
     np = trellis.pixels._neopixel
-    for st in sts:
-        np[st] = clr
+    for st in sts: np[st] = clr
                 
 """
 ======== Constants ========
@@ -429,8 +420,6 @@ current_slot = 0
 """
 Grid Objects
 """
-notes = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send)
-shift = NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send)
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 pattern_select = Grid(8, 4, CORRECT_INDEX)
 
@@ -466,25 +455,19 @@ Offset
 """
 row_offset = 0
 column_offset = 0
-last_step = 8
 
 """
 Modes
 """
 mode = b'm'
 
-"""
-Axis Modes
-"""
-axis_modes = [ None, None, None ]
-
 manual_notes = []
 prev_manual_notes = []
 manual_cc = []
 prev_manual_cc = []
 toggled_cc = []
-        
-print( read_save(current_slot, notes, shift) )
+
+[ notes, shift, last_step, axis_modes ] = read_save(current_slot, NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send), NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send))
 
 while True:
     
@@ -520,7 +503,7 @@ while True:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step == i:
                         if mode == b's':
-                            move_column(shift, last_step, SHIFT_COLUMN_COLOR, SHIFT_NOTE_ON, SHIFT_ACCENT, SHIFT_NOTE_OFF, row_offset, column_offset)
+                            move_column(shift, last_step, SHIFT_COLUMN_COLOR, SHIFT_NOTE_ON, SHIFT_ACCENT, NOTE_OFF, row_offset, column_offset)
                         play_column(shift, i-1)
                         stop_column(shift, i-2)
             ticks += 1
