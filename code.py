@@ -215,7 +215,7 @@ def handle_select_mode(pb):
 def handle_cc_lights(pressed_buttons, cc_edit, row):
     cc_edit.grid[pressed_buttons[0][1]][row].is_on = True
 
-def increase_row_offset(row_offset, rows): #TODO use local variables
+def increase_row_offset(row_offset, rows):
     new_offset = row_offset + 4
     return new_offset if new_offset < rows else row_offset
     
@@ -291,10 +291,22 @@ def get_slots():
 def light_slots(sts, clr, np):
     for st in sts: np[st] = clr
     
-def handle_last_step_edit(lst_stp, pb, inc, de, cols): #FEAT have a way to change this a whole measure at once
-    if     pb == inc: return lst_stp + 1 if lst_stp < cols - 1 else lst_stp
-    elif   pb == de:  return lst_stp - 1 if lst_stp > 1 else lst_stp
-    else:             return lst_stp
+def handle_last_step_edit(lst_stp, pb, bts, cols):
+    if pb == bts[0]: # Decrease by measure
+        remainder = lst_stp % 8
+        if remainder == 0: return lst_stp - 8 if lst_stp - 8 != 0 else 1
+        else: return lst_stp - remainder if lst_stp - remainder != 0 else 1
+        
+    elif pb == bts[1]: # Decrease by 1 Eighth note
+        return lst_stp - 1 if lst_stp > 1 else lst_stp
+    
+    elif pb == bts[2]: # Increase by 1 Eighth note
+        return lst_stp + 1 if lst_stp < cols - 1 else lst_stp
+    
+    elif pb == bts[3]: # Increase by measure
+        remainder = lst_stp % 8
+        if remainder == 0: return lst_stp + 8 if lst_stp + 8 < cols else lst_stp #TODO have a way to duplicate measures when changing last step
+        else: return lst_stp + (8-remainder)
 
 def fill_yes_no(conf_clr, dcln_clr, np):
     r = range(32)
@@ -366,8 +378,7 @@ SHIFT_LEFT	     			     = (2, 4)
 SHIFT_RIGHT				   	     = (2, 6)
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
 LAST_STEP_EDIT_COMBO             = [(2, 7), (0, 7)]
-LAST_STEP_INCREASE	             = (1, 6) #TODO these can be combined into one tuple
-LAST_STEP_DECREASE               = (1, 4)
+LAST_STEP_BUTTONS                = ( (1, 3), (1, 4), (1, 5), (1, 6) )
 SELECT_SLOT_MODE			     = [(3, 0), (0, 0), (3, 4)]
 DELETE_SLOT_MODE                 = [(3, 0), (0, 0), (2, 4)]
 DELETE_ALL_SLOTS_MODE            = [(3, 0), (0, 0), (1, 4)]
@@ -678,10 +689,7 @@ while True:
                 
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
-                        if pressed_buttons[0] == LAST_STEP_INCREASE:
-                            last_step = last_step + 1 if last_step < NUMBER_OF_COLUMNS else last_step
-                        if pressed_buttons[0] == LAST_STEP_DECREASE:
-                            last_step = last_step - 1 if last_step > 1 else last_step
+                        last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_BUTTONS, NUMBER_OF_COLUMNS)
                         
                 else:
                     print(pressed_buttons)
@@ -847,7 +855,7 @@ while True:
                 
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO:
                     if len(pressed_buttons) > 2:
-                        last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_INCREASE, LAST_STEP_DECREASE, NUMBER_OF_COLUMNS)
+                        last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_BUTTONS, NUMBER_OF_COLUMNS)
                             
                 else:
                     print(pressed_buttons)
@@ -950,7 +958,7 @@ while True:
     """
     ======== Send Axes CC ========
     """
-    if not ticks == last_tick:
+    if ticks != last_tick:
         handle_axes(axis_modes, accelerometer.acceleration, axis_ccs, ControlChange)
         
     last_tick = ticks
