@@ -108,8 +108,7 @@ def reset_colors(nts, on, off=(0, 0, 0), row_offs=0, col_offs=0):
 
 def light_column(col, col_clr):
     np = trellis.pixels._neopixel
-    for i in range(4):
-        np[ col + (i*8) ] = col_clr
+    for i in range(4): np[ col + (i*8) ] = col_clr
     
 def reset_column(nts, offs, col, on, off, acct):
     np = trellis.pixels._neopixel
@@ -119,35 +118,33 @@ def reset_column(nts, offs, col, on, off, acct):
 def play_column(nts, col):
     col = tuple(nts.grid[col])
     r = range(len(col))
-    for i in r:
-        col[i].play()
+    for i in r: col[i].play()
         
 def stop_column(nts, col):
     col = tuple(nts.grid[col])
     r = range(len(col))
-    for i in r:
-        col[i].stop()
+    for i in r: col[i].stop()
 
-def move_column(grd, lst_stp, col_clr, on, acct, off=(0, 0, 0), row_offs=0, col_offs=0):
-    if i % 8 == 0:
+def move_column(ind, grd, lst_stp, col_clr, on, acct, off=(0, 0, 0), row_offs=0, col_offs=0):
+    if ind % 8 == 0:
         if column_offset == lst_stp+1 - 8:
-            if i == 0:
+            if ind == 0:
                 light_column(7, col_clr)
                 reset_column(grd, row_offs, 6, on, off, acct) #BUG last column hangs up in shift mode
             
         else:
-            if col_offs < i <= col_offs + 8:
+            if col_offs < ind <= col_offs + 8:
                 light_column(7, col_clr)
                 reset_column(grd, row_offs, col_offs + 6, on, off, acct)
     else:
-        if i % 8 == 1:
+        if ind % 8 == 1:
             reset_column(grd, row_offs, col_offs + 7, on, off, acct)
             
-        if col_offs <= i < col_offs + 8:
-            light_column((i-1)%8, col_clr)
-            reset_column(grd, row_offs, (i-2), on, off, acct)
+        if col_offs <= ind < col_offs + 8:
+            light_column((ind-1)%8, col_clr)
+            reset_column(grd, row_offs, (ind-2), on, off, acct)
             
-    if i == 1:
+    if ind == 1:
         reset_column(grd, row_offs, col_offs + 7, on, off, acct)
         reset_column(grd, row_offs, (lst_stp-1)%8, on, off, acct)
 
@@ -218,17 +215,17 @@ def handle_select_mode(pb):
 def handle_cc_lights(pressed_buttons, cc_edit, row):
     cc_edit.grid[pressed_buttons[0][1]][row].is_on = True
 
-def increase_row_offset(row_offset):
+def increase_row_offset(row_offset, rows): #TODO use local variables
     new_offset = row_offset + 4
-    return new_offset if new_offset < NUMBER_OF_ROWS else row_offset
+    return new_offset if new_offset < rows else row_offset
     
 def decrease_row_offset(row_offset):
     new_offset = row_offset - 4
     return new_offset if new_offset >= 0 else row_offset
  
-def increase_column_offset(column_offset):
+def increase_column_offset(column_offset, cols):
     new_offset = column_offset + 8
-    return new_offset if new_offset < NUMBER_OF_COLUMNS else column_offset
+    return new_offset if new_offset < cols else column_offset
     
 def decrease_column_offset(column_offset):
     new_offset = column_offset - 8
@@ -471,7 +468,7 @@ while True:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step + 1 == i:
                         if mode == b'm':
-                            move_column(notes, last_step, COLUMN_COLOR, NOTE_ON, ACCENT, NOTE_OFF, row_offset, column_offset)
+                            move_column(i, notes, last_step, COLUMN_COLOR, NOTE_ON, ACCENT, NOTE_OFF, row_offset, column_offset)
                         play_column(notes, i-1)
                         stop_column(notes, i-2)
                 eighth_note += 1           
@@ -567,7 +564,7 @@ while True:
                 elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == INCREASE_ROW_OFFSET:
-                            row_offset = increase_row_offset(row_offset)
+                            row_offset = increase_row_offset(row_offset, NUMBER_OF_ROWS)
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == DECREASE_ROW_OFFSET:
@@ -575,7 +572,7 @@ while True:
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET:
-                            column_offset = increase_column_offset(column_offset)
+                            column_offset = increase_column_offset(column_offset, NUMBER_OF_COLUMNS)
                             reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET:
