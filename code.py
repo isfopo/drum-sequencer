@@ -504,7 +504,7 @@ while True:
             """
             Shift Grid
             """
-            if ticks % 12 == 6:
+            if ticks % 12 == 7:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step == i:
                         if mode == b's':
