@@ -305,8 +305,17 @@ def handle_last_step_edit(lst_stp, pb, bts, cols):
     
     elif pb == bts[3]: # Increase by measure
         remainder = lst_stp % 8
-        if remainder == 0: return lst_stp + 8 if lst_stp + 8 < cols else lst_stp #TODO have a way to duplicate measures when changing last step
+        if remainder == 0: return lst_stp + 8 if lst_stp + 8 < cols else lst_stp
         else: return lst_stp + (8-remainder)
+
+def duplicate_measure(grids):
+    for grid in grids:
+        for i, column in enumerate(grid.grid):
+            if i >= 8:
+                for j, note in enumerate(column):
+                    note.is_on = grid.grid[i-8][j].is_on
+                    note.is_accented = grid.grid[i-8][j].is_accented
+    return grids
 
 def fill_yes_no(conf_clr, dcln_clr, np):
     r = range(32)
@@ -340,10 +349,10 @@ MANUAL_NOTE_COLOR_ALT  = (   0, 191, 191 )
 RECORD_NOTE_COLOR      = ( 255,   0,   0 )
 MANUAL_CC_COLOR        = (   0, 255,  63 )
 CURRENT_SLOT_COLOR     = (  11, 255,  11 )
-SAVE_SLOT_COLOR		   = ( 191, 191,  11 )
+SAVE_SLOT_COLOR        = ( 191, 191,  11 )
 DELETE_SLOT_COLOR      = ( 191,  11,  11 )
-CONFIRM_COLOR		   = (   0, 255,   0 )
-DECLINE_COLOR		   = ( 255,   0,   0 )
+CONFIRM_COLOR          = (   0, 255,   0 )
+DECLINE_COLOR          = ( 255,   0,   0 )
 
 """
 Grid Parameters
@@ -366,20 +375,20 @@ EDIT_CC_BACK                     = [(3, 0), (3, 1), (3, 7)]
 TOGGLE_X_COMBO                   = [(2, 0), (0, 0), (2, 1)]
 TOGGLE_Y_COMBO                   = [(2, 0), (0, 0), (2, 2)]
 TOGGLE_Z_COMBO                   = [(2, 0), (0, 0), (2, 3)]
-OFFSET_CHANGE_MODE_COMBO		 = [(3, 6), (0, 6)]
-INCREASE_ROW_OFFSET       	     = (3, 4) #TODO these can be combined into one tuple
+OFFSET_CHANGE_MODE_COMBO         = [(3, 6), (0, 6)]
+INCREASE_ROW_OFFSET              = (3, 4) #TODO these can be combined into one tuple
 DECREASE_ROW_OFFSET         	 = (1, 4)
 INCREASE_COLUMN_OFFSET	     	 = (2, 5)
 DECREASE_COLUMN_OFFSET      	 = (2, 3)
-PATTERN_SHIFT_MODE_COMBO	     = [(3, 7), (0, 7)]
-SHIFT_UP			    		 = (3, 5) #TODO these can be combined into one tuple
+PATTERN_SHIFT_MODE_COMBO         = [(3, 7), (0, 7)]
+SHIFT_UP                         = (3, 5) #TODO these can be combined into one tuple
 SHIFT_DOWN                       = (1, 5)
-SHIFT_LEFT	     			     = (2, 4)
-SHIFT_RIGHT				   	     = (2, 6)
+SHIFT_LEFT                       = (2, 4)
+SHIFT_RIGHT                      = (2, 6)
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
 LAST_STEP_EDIT_COMBO             = [(2, 7), (0, 7)]
 LAST_STEP_BUTTONS                = ( (1, 3), (1, 4), (1, 5), (1, 6) )
-SELECT_SLOT_MODE			     = [(3, 0), (0, 0), (3, 4)]
+SELECT_SLOT_MODE                 = [(3, 0), (0, 0), (3, 4)]
 DELETE_SLOT_MODE                 = [(3, 0), (0, 0), (2, 4)]
 DELETE_ALL_SLOTS_MODE            = [(3, 0), (0, 0), (1, 4)]
 
@@ -679,7 +688,7 @@ while True:
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
-                    seperate_manual_note_channel = False if seperate_manual_note_channel else True
+                    seperate_manual_note_channel = False if seperate_manual_note_channel else True #TODO there a better way to write this
                 
                 elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
@@ -695,6 +704,9 @@ while True:
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
                         last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_BUTTONS, NUMBER_OF_COLUMNS)
+                        #TODO have a way to duplicate measures when changing last step
+                        if pressed_buttons[0] == LAST_STEP_BUTTONS[3]:
+                            [notes, shift] = duplicate_measure((notes, shift))
                         
                 else:
                     print(pressed_buttons)
