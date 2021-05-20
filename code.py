@@ -104,7 +104,6 @@ def light_column(col, col_clr, np):
     
 def reset_column(nts, offs, col, on, off, acct, np):
     for nt in nts.grid[col][offs:offs+4]:
-        print("works?")
         np[nt.index] = acct if nt.is_accented else on if nt.is_on else off
 
 def play_column(nts, col):
@@ -429,6 +428,7 @@ midi = MIDI(midi_in=ports[0], midi_out=ports[1], in_channel=0, out_channel=0)
 receive = midi.receive
 trellis = TrellisM4Express(rotation=90)
 neop = trellis.pixels._neopixel
+fill = trellis.pixels.fill
 i2c = I2C(ACCELEROMETER_SCL, ACCELEROMETER_SDA)
 accelerometer = ADXL345(i2c)
 
@@ -577,15 +577,15 @@ while True:
                     
                 elif pressed_buttons == SELECT_SLOT_MODE:
                     mode = b'p'
-                    trellis.pixels.fill(NOTE_OFF)
+                    fill(NOTE_OFF)
                     
                 elif pressed_buttons == DELETE_SLOT_MODE:
                     mode = b'd'
-                    trellis.pixels.fill(NOTE_OFF)
+                    fill(NOTE_OFF)
                     
                 elif pressed_buttons == DELETE_ALL_SLOTS_MODE:
                     mode = b'da'
-                    trellis.pixels.fill(NOTE_OFF)
+                    fill(NOTE_OFF)
                 
                 elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
