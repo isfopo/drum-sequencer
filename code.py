@@ -21,12 +21,6 @@ from adafruit_midi.note_off import NoteOff
 from adafruit_midi.note_on import NoteOn
 from adafruit_midi.control_change import ControlChange
 
-midi = MIDI(midi_in=ports[0], midi_out=ports[1], in_channel=0, out_channel=0)
-receive = midi.receive
-trellis = TrellisM4Express(rotation=90)
-i2c = I2C(ACCELEROMETER_SCL, ACCELEROMETER_SDA)
-accelerometer = ADXL345(i2c)
-
 """
 ======== Classes ========
 """
@@ -100,19 +94,17 @@ class Note(Cell):
 """
 ======== Fuctions ======== #TODO can these functions be imported from a .mpy file?
 """
-def reset_colors(nts, on, off=(0, 0, 0), row_offs=0, col_offs=0):
-    np = trellis.pixels._neopixel
+def reset_colors(nts, np, on, off=(0, 0, 0), row_offs=0, col_offs=0):
     for col in nts.grid[col_offs:col_offs+8]:
         for nt in col[row_offs:row_offs+4]:
             np[nt.index] = on if nt.is_on else off
 
-def light_column(col, col_clr):
-    np = trellis.pixels._neopixel
+def light_column(col, col_clr, np):
     for i in range(4): np[ col + (i*8) ] = col_clr
     
-def reset_column(nts, offs, col, on, off, acct):
-    np = trellis.pixels._neopixel
+def reset_column(nts, offs, col, on, off, acct, np):
     for nt in nts.grid[col][offs:offs+4]:
+        print("works?")
         np[nt.index] = acct if nt.is_accented else on if nt.is_on else off
 
 def play_column(nts, col):
@@ -125,28 +117,28 @@ def stop_column(nts, col):
     r = range(len(col))
     for i in r: col[i].stop()
 
-def move_column(ind, grd, lst_stp, col_clr, on, acct, off=(0, 0, 0), row_offs=0, col_offs=0):
-    if ind % 8 == 0:
+def move_column(indx, grd, lst_stp, col_clr, on, acct, np, off=(0, 0, 0), row_offs=0, col_offs=0):
+    if indx % 8 == 0:
         if column_offset == lst_stp+1 - 8:
-            if ind == 0:
-                light_column(7, col_clr)
-                reset_column(grd, row_offs, 6, on, off, acct) #BUG last column hangs up in shift mode
+            if indx == 0:
+                light_column(7, col_clr, np)
+                reset_column(grd, row_offs, 6, on, off, acct, np) #BUG last column hangs up in shift mode
             
         else:
-            if col_offs < ind <= col_offs + 8:
-                light_column(7, col_clr)
-                reset_column(grd, row_offs, col_offs + 6, on, off, acct)
+            if col_offs < indx <= col_offs + 8:
+                light_column(7, col_clr, np)
+                reset_column(grd, row_offs, col_offs + 6, on, off, acct, np)
     else:
-        if ind % 8 == 1:
-            reset_column(grd, row_offs, col_offs + 7, on, off, acct)
+        if indx % 8 == 1:
+            reset_column(grd, row_offs, col_offs + 7, on, off, acct, np)
             
-        if col_offs <= ind < col_offs + 8:
-            light_column((ind-1)%8, col_clr)
-            reset_column(grd, row_offs, (ind-2), on, off, acct)
+        if col_offs <= indx < col_offs + 8:
+            light_column((indx-1)%8, col_clr, np)
+            reset_column(grd, row_offs, (indx-2), on, off, acct, np)
             
-    if ind == 1:
-        reset_column(grd, row_offs, col_offs + 7, on, off, acct)
-        reset_column(grd, row_offs, (lst_stp-1)%8, on, off, acct)
+    if indx == 1:
+        reset_column(grd, row_offs, col_offs + 7, on, off, acct, np)
+        reset_column(grd, row_offs, (lst_stp-1)%8, on, off, acct, np)
 
 def stop_notes(notes):
     map(lambda x: map(lambda y: y.stop(), x), notes.grid)
@@ -308,7 +300,7 @@ def handle_last_step_edit(lst_stp, pb, bts, cols):
         if remainder == 0: return lst_stp + 8 if lst_stp + 8 < cols else lst_stp
         else: return lst_stp + (8-remainder)
 
-def duplicate_measure(grids):
+def duplicate_measure(grids): #OPTIMIZE
     for grid in grids:
         for i, column in enumerate(grid.grid):
             if i >= 8:
@@ -432,6 +424,15 @@ MANUAL_CC         = ( ( 22, 23, 24, 25 ),
 """
 ======== Global Variables ========
 """
+
+midi = MIDI(midi_in=ports[0], midi_out=ports[1], in_channel=0, out_channel=0)
+receive = midi.receive
+trellis = TrellisM4Express(rotation=90)
+neop = trellis.pixels._neopixel
+i2c = I2C(ACCELEROMETER_SCL, ACCELEROMETER_SDA)
+accelerometer = ADXL345(i2c)
+
+
 current_slot = 0
 [ notes, shift, last_step, axis_modes ] = read_save(
         current_slot,
@@ -493,7 +494,7 @@ while True:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step + 1 == i:
                         if mode == b'm':
-                            move_column(i, notes, last_step, COLUMN_COLOR, NOTE_ON, ACCENT, NOTE_OFF, row_offset, column_offset)
+                            move_column(i, notes, last_step, COLUMN_COLOR, NOTE_ON, ACCENT, neop, NOTE_OFF, row_offset, column_offset)
                         play_column(notes, i-1)
                         stop_column(notes, i-2)
                 eighth_note += 1           
@@ -504,7 +505,7 @@ while True:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step == i:
                         if mode == b's':
-                            move_column(shift, last_step, SHIFT_COLUMN_COLOR, SHIFT_NOTE_ON, SHIFT_ACCENT, NOTE_OFF, row_offset, column_offset)
+                            move_column(i, shift, last_step, SHIFT_COLUMN_COLOR, SHIFT_NOTE_ON, SHIFT_ACCENT, neop, NOTE_OFF, row_offset, column_offset)
                         play_column(shift, i-1)
                         stop_column(shift, i-2)
             ticks += 1
@@ -517,7 +518,7 @@ while True:
             eighth_note = 0
             
         if isinstance(new_message, Stop):
-            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
             stop_notes(notes)
 
             
@@ -543,14 +544,14 @@ while True:
                         
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
-                    trellis.pixels._neopixel[held_note.index] = NOTE_ON if not held_note.is_on else NOTE_OFF
+                    neop[held_note.index] = NOTE_ON if not held_note.is_on else NOTE_OFF
                     held_note.toggle() #TODO somehting is slow here - there is a slight delay when a new note is added
                     if held_note.is_accented:
                         held_note.toggle_accent()
                     button_is_held = False
                 else:
                     if not held_note.is_on:
-                        trellis.pixels._neopixel[held_note.index] = ACCENT if not held_note.is_accented else NOTE_OFF
+                        neop[held_note.index] = ACCENT if not held_note.is_accented else NOTE_OFF
                         held_note.toggle()
                     held_note.toggle_accent()
             if not pressed_buttons:
@@ -564,15 +565,15 @@ while True:
                 if pressed_buttons == CLEAR_COMBO:
                     clear_grid(notes)
                     clear_grid(shift)
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons == SHIFT_MODE_COMBO:
                     mode = b's'
-                    reset_colors(shift, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(shift, neop, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons == EDIT_CC_COMBO:
                     mode = b'c'
-                    reset_colors(cc_edit, EDIT_CC_COLOR, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(cc_edit, neop, EDIT_CC_COLOR, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons == SELECT_SLOT_MODE:
                     mode = b'p'
@@ -590,23 +591,23 @@ while True:
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == INCREASE_ROW_OFFSET:
                             row_offset = increase_row_offset(row_offset, NUMBER_OF_ROWS)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == DECREASE_ROW_OFFSET:
                             row_offset = decrease_row_offset(row_offset)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET:
                             column_offset = increase_column_offset(column_offset, NUMBER_OF_COLUMNS)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET:
                             column_offset = decrease_column_offset(column_offset)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
-                        trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                        neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
@@ -620,21 +621,21 @@ while True:
                         if cc not in prev_manual_cc:
                             if cc[1][0] <= 1:
                                 midi.send(ControlChange(cc[0], 127))
-                                trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                                neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                             if cc[1][0] >= 2:
                                 if cc not in toggled_cc:
                                     toggled_cc.append(cc)
                                     midi.send(ControlChange(cc[0], 127))
-                                    trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                                    neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                                 else:
                                     toggled_cc.remove(cc)
                                     midi.send(ControlChange(cc[0], 0))
-                                    trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                                    neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     for cc in prev_manual_cc:
                         if cc not in manual_cc:
                             if cc[1][0] <=1:
                                 midi.send(ControlChange(cc[0], 0))
-                                trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                                neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_cc = manual_cc
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
@@ -650,11 +651,11 @@ while True:
                     for note in manual_notes:
                         if note not in prev_manual_notes:
                             midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
+                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_notes = manual_notes
                     
                 elif pressed_buttons[-2:] == RECORD_NOTE_COMBO: 
@@ -680,11 +681,11 @@ while True:
                                         grid_note.is_on = True
                             if round(column_now) - column_now < 0:
                                 midi.send(NoteOn(note[0], 127))
-                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = RECORD_NOTE_COLOR
+                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = RECORD_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0))
-                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
@@ -695,11 +696,11 @@ while True:
                         if pressed_buttons[0] == SHIFT_LEFT:
                             notes = shift_grid_left(notes)
                             shift = shift_grid_left(shift)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                         elif pressed_buttons[0] == SHIFT_RIGHT:
                             notes = shift_grid_right(notes)
                             shift = shift_grid_right(shift)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
@@ -713,7 +714,7 @@ while True:
                     
                 button_is_held = False
             else:
-                reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
             """
             Shift Mode
@@ -728,14 +729,14 @@ while True:
                         
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
-                    trellis.pixels._neopixel[held_note.index] = SHIFT_NOTE_ON if not held_note.is_on else NOTE_OFF
+                    neop[held_note.index] = SHIFT_NOTE_ON if not held_note.is_on else NOTE_OFF
                     held_note.toggle()
                     if held_note.is_accented:
                         held_note.toggle_accent()
                     button_is_held = False
                 else:
                     if not held_note.is_on:
-                        trellis.pixels._neopixel[held_note.index] = SHIFT_ACCENT if not held_note.is_accented else NOTE_OFF
+                        neop[held_note.index] = SHIFT_ACCENT if not held_note.is_accented else NOTE_OFF
                         held_note.toggle()
                     held_note.toggle_accent()
             if not pressed_buttons:
@@ -748,34 +749,34 @@ while True:
                 combo_pressed = True
                 if pressed_buttons == BACK_COMBO: #TODO don't use back combo, use the same combo as to get there
                     mode = b'm'
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons == CLEAR_COMBO:
                     clear_grid(notes)
                     clear_grid(shift)
-                    reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(notes, neop, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == INCREASE_ROW_OFFSET:
                             row_offset = increase_row_offset(row_offset)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == DECREASE_ROW_OFFSET:
                             row_offset = decrease_row_offset(row_offset)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET:
                             column_offset = increase_column_offset(column_offset)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET:
                             column_offset = decrease_column_offset(column_offset)
-                            reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
 
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
-                        trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                        neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
@@ -789,21 +790,21 @@ while True:
                         if cc not in prev_manual_cc:
                             if cc[1][0] <= 1:
                                 midi.send(ControlChange(cc[0], 127))
-                                trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                                neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                             if cc[1][0] >= 2:
                                 if cc not in toggled_cc:
                                     toggled_cc.append(cc)
                                     midi.send(ControlChange(cc[0], 127))
-                                    trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                                    neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
                                 else:
                                     toggled_cc.remove(cc)
                                     midi.send(ControlChange(cc[0], 0))
-                                    trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                                    neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     for cc in prev_manual_cc:
                         if cc not in manual_cc:
                             if cc[1][0] <=1:
                                 midi.send(ControlChange(cc[0], 0))
-                                trellis.pixels._neopixel[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                                neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_cc = manual_cc
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
@@ -819,11 +820,11 @@ while True:
                     for note in manual_notes:
                         if note not in prev_manual_notes:
                             midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
+                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
-                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons[-2:] == RECORD_NOTE_COMBO: 
@@ -849,11 +850,11 @@ while True:
                                         grid_note.is_on = True
                             if round(column_now) - column_now < 0:
                                 midi.send(NoteOn(note[0], 127))
-                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = RECORD_NOTE_COLOR
+                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = RECORD_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0))
-                            trellis.pixels._neopixel[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
@@ -864,11 +865,11 @@ while True:
                         if pressed_buttons[0] == SHIFT_LEFT:
                             notes = shift_grid_left(notes)
                             shift = shift_grid_left(shift)
-                            reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                         elif pressed_buttons[0] == SHIFT_RIGHT:
                             notes = shift_grid_right(notes)
                             shift = shift_grid_right(shift)
-                            reset_colors(notes, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes, neop, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO:
                     if len(pressed_buttons) > 2:
@@ -884,7 +885,7 @@ while True:
                 """
         elif mode == b'c':
             handle_cc_grid(cc_edit, axis_modes, 2)
-            reset_colors(cc_edit, EDIT_CC_COLOR)
+            reset_colors(cc_edit, neop, EDIT_CC_COLOR)
             
             if pressed_buttons and not combo_pressed:
                 
@@ -895,19 +896,19 @@ while True:
                     axis_modes[0] = handle_select_mode(pressed_buttons[0][1])
                     row_off(cc_edit, 2)
                     handle_cc_lights(pressed_buttons, cc_edit, 2)
-                    reset_colors(cc_edit, EDIT_CC_COLOR)
+                    reset_colors(cc_edit, neop, EDIT_CC_COLOR)
 
                 elif pressed_buttons[0][0] == 1:
                     axis_modes[1] = handle_select_mode(pressed_buttons[0][1])
                     row_off(cc_edit, 1)
                     handle_cc_lights(pressed_buttons, cc_edit, 1)
-                    reset_colors(cc_edit, EDIT_CC_COLOR)
+                    reset_colors(cc_edit, neop, EDIT_CC_COLOR)
                     
                 elif pressed_buttons[0][0] == 0:
                     axis_modes[2] = handle_select_mode(pressed_buttons[0][1])
                     row_off(cc_edit, 0)
                     handle_cc_lights(pressed_buttons, cc_edit, 0)
-                    reset_colors(cc_edit, EDIT_CC_COLOR)
+                    reset_colors(cc_edit, neop, EDIT_CC_COLOR)
             
             """
             Edit CC Combos
@@ -915,7 +916,7 @@ while True:
             if len(pressed_buttons) > 2:
                 if pressed_buttons == EDIT_CC_BACK:
                     mode = b'm'
-                    reset_colors(notes, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 else:
                     print(pressed_buttons)
             if not pressed_buttons:
@@ -926,8 +927,8 @@ while True:
             """
         elif mode == b'p':
             slots = get_slots()
-            light_slots(slots, SAVE_SLOT_COLOR, trellis.pixels._neopixel)
-            trellis.pixels._neopixel[current_slot] = CURRENT_SLOT_COLOR
+            light_slots(slots, SAVE_SLOT_COLOR, neop)
+            neop[current_slot] = CURRENT_SLOT_COLOR
                 
             if pressed_buttons and not combo_pressed:
                 write_save(notes, shift, last_step, axis_modes)
@@ -943,7 +944,7 @@ while True:
             """
         elif mode == b'd':
             slots = get_slots()
-            if slots: light_slots(slots, DELETE_SLOT_COLOR, trellis.pixels._neopixel)
+            if slots: light_slots(slots, DELETE_SLOT_COLOR, neop)
             else: mode = b'm'
                 
             if pressed_buttons and not combo_pressed and press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) in slots:
@@ -957,7 +958,7 @@ while True:
             Delete All Pattern Mode
             """
         elif mode == b'da':
-            fill_yes_no(CONFIRM_COLOR, DECLINE_COLOR, trellis.pixels._neopixel)
+            fill_yes_no(CONFIRM_COLOR, DECLINE_COLOR, neop)
             
             if pressed_buttons and not combo_pressed:
                 if press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) < 16:
