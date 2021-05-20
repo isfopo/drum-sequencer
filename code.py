@@ -301,11 +301,11 @@ def handle_last_step_edit(lst_stp, pb, bts, cols):
 
 def duplicate_measure(grids): #OPTIMIZE
     for grid in grids:
-        for i, column in enumerate(grid.grid):
+        for i, column in enumerate(grid):
             if i >= 8:
                 for j, note in enumerate(column):
-                    note.is_on = grid.grid[i-8][j].is_on
-                    note.is_accented = grid.grid[i-8][j].is_accented
+                    note.is_on = grid[i-8][j].is_on
+                    note.is_accented = grid[i-8][j].is_accented
     return grids
 
 def fill_yes_no(conf_clr, dcln_clr, np):
@@ -707,7 +707,7 @@ while True:
                         last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_BUTTONS, NUMBER_OF_COLUMNS)
                         #TODO have a way to duplicate measures when changing last step
                         if pressed_buttons[0] == LAST_STEP_BUTTONS[3]:
-                            [notes, shift] = duplicate_measure((notes, shift))
+                            [notes.grid, shift.grid] = duplicate_measure((notes.grid, shift.grid))
                         
                 else:
                     print(pressed_buttons)
