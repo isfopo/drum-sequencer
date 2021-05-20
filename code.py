@@ -99,6 +99,10 @@ def reset_colors(nts, np, on, off=(0, 0, 0), row_offs=0, col_offs=0):
         for nt in col[row_offs:row_offs+4]:
             np[nt.index] = on if nt.is_on else off
 
+def light_buttons(bts, clr, np, p2l):
+    for bt in bts:
+        np[press_to_light(bt, p2l)] = clr
+
 def light_column(col, col_clr, np):
     for i in range(4): np[ col + (i*8) ] = col_clr
     
@@ -155,7 +159,7 @@ def scale(val, src, dst):
 def correct_index(index, i, ci):
     return ci[index+((i%8)*4)]
 
-def press_to_light(button, p2l):
+def press_to_light(button, p2l): #TODO should p2l be stored here?
     return p2l[button[0]][button[1]]
 
 def handle_axis(mode, axis, up_cc, down_cc, s, cc):
@@ -344,6 +348,7 @@ SAVE_SLOT_COLOR        = ( 191, 191,  11 )
 DELETE_SLOT_COLOR      = ( 191,  11,  11 )
 CONFIRM_COLOR          = (   0, 255,   0 )
 DECLINE_COLOR          = ( 255,   0,   0 )
+LAST_STEP_COLOR        = ( 255,  11, 191 )
 
 """
 Grid Parameters
@@ -703,9 +708,9 @@ while True:
                             reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO: #FEAT light up availible buttons
+                    light_buttons(LAST_STEP_BUTTONS, LAST_STEP_COLOR, neop, PRESS_TO_LIGHT)
                     if len(pressed_buttons) > 2:
                         last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_BUTTONS, NUMBER_OF_COLUMNS)
-                        #TODO have a way to duplicate measures when changing last step
                         if pressed_buttons[0] == LAST_STEP_BUTTONS[3]:
                             [notes.grid, shift.grid] = duplicate_measure((notes.grid, shift.grid))
                         
