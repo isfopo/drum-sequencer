@@ -424,8 +424,13 @@ MANUAL_CC         = ( ( 22, 23, 24, 25 ),
 ======== Global Variables ========
 """
 current_slot = 0
-[ notes, shift, last_step, axis_modes ] = read_save(current_slot, NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send), NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send))
+[ notes, shift, last_step, axis_modes ] = read_save(
+        current_slot,
+        NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send),
+        NoteGrid(NUMBER_OF_COLUMNS, NUMBER_OF_ROWS, STARTING_NOTE, midi.send)
+    )
 #TODO can notes and shift be combined into a single tuple?
+#TODO can there be a third note grid to make a triplet/swing feel?
 cc_edit = Grid(8, 4, CORRECT_INDEX)
 pattern_select = Grid(8, 4, CORRECT_INDEX)
 
