@@ -99,9 +99,9 @@ def reset_colors(nts, np, on, off=(0, 0, 0), row_offs=0, col_offs=0):
         for nt in col[row_offs:row_offs+4]:
             np[nt.index] = on if nt.is_on else off
 
-def light_buttons(bts, clr, np, p2l):
+def light_buttons(bts, clr, np):
     for bt in bts:
-        np[press_to_light(bt, p2l)] = clr
+        np[press_to_light(bt)] = clr
 
 def light_column(col, col_clr, np):
     for i in range(4): np[ col + (i*8) ] = col_clr
@@ -159,8 +159,11 @@ def scale(val, src, dst):
 def correct_index(index, i, ci):
     return ci[index+((i%8)*4)]
 
-def press_to_light(button, p2l): #TODO should p2l be stored here?
-    return p2l[button[0]][button[1]]
+def press_to_light(btn): #TODO should p2l be stored here?
+    return  ( ( 24, 25, 26, 27, 28, 29, 30, 31 ),
+              ( 16, 17, 18, 19, 20, 21, 22, 23 ),
+              (  8,  9, 10, 11, 12, 13, 14, 15 ),
+              (  0,  1,  2,  3,  4,  5,  6,  7 ) )[btn[0]][btn[1]]
 
 def handle_axis(mode, axis, up_cc, down_cc, s, cc):
     if   mode == b'd': s(cc(up_cc, scale(axis, (-10, 10), (0, 127))))
@@ -410,11 +413,6 @@ CORRECT_INDEX  =  ( 24, 16,  8, 0,
                     30, 22, 14, 6,
                     31, 23, 15, 7 )
 
-PRESS_TO_LIGHT    = ( ( 24, 25, 26, 27, 28, 29, 30, 31 ),
-                      ( 16, 17, 18, 19, 20, 21, 22, 23 ),
-                      (  8,  9, 10, 11, 12, 13, 14, 15 ),
-                      (  0,  1,  2,  3,  4,  5,  6,  7 ) )
-
 MANUAL_NOTES      = ( ( 48, 44, 40, 36 ),
                       ( 49, 45, 41, 37 ),
                       ( 50, 46, 42, 38 ),
@@ -612,7 +610,7 @@ while True:
                     
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
-                        neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                        neop[press_to_light(cc[1])] = MANUAL_CC_COLOR
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
@@ -626,21 +624,21 @@ while True:
                         if cc not in prev_manual_cc:
                             if cc[1][0] <= 1:
                                 midi.send(ControlChange(cc[0], 127))
-                                neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                                neop[press_to_light(cc[1])] = MANUAL_CC_COLOR
                             if cc[1][0] >= 2:
                                 if cc not in toggled_cc:
                                     toggled_cc.append(cc)
                                     midi.send(ControlChange(cc[0], 127))
-                                    neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                                    neop[press_to_light(cc[1])] = MANUAL_CC_COLOR
                                 else:
                                     toggled_cc.remove(cc)
                                     midi.send(ControlChange(cc[0], 0))
-                                    neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                                    neop[press_to_light(cc[1])] = NOTE_OFF
                     for cc in prev_manual_cc:
                         if cc not in manual_cc:
                             if cc[1][0] <=1:
                                 midi.send(ControlChange(cc[0], 0))
-                                neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                                neop[press_to_light(cc[1])] = NOTE_OFF
                     prev_manual_cc = manual_cc
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
@@ -656,11 +654,11 @@ while True:
                     for note in manual_notes:
                         if note not in prev_manual_notes:
                             midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
+                            neop[press_to_light(note[1])] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
-                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                            neop[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
                     
                 elif pressed_buttons[-2:] == RECORD_NOTE_COMBO: 
@@ -686,11 +684,11 @@ while True:
                                         grid_note.is_on = True
                             if round(column_now) - column_now < 0:
                                 midi.send(NoteOn(note[0], 127))
-                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = RECORD_NOTE_COLOR
+                            neop[press_to_light(note[1])] = RECORD_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0))
-                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                            neop[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
@@ -708,7 +706,7 @@ while True:
                             reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO: #FEAT light up availible buttons
-                    light_buttons(LAST_STEP_BUTTONS, LAST_STEP_COLOR, neop, PRESS_TO_LIGHT)
+                    light_buttons(LAST_STEP_BUTTONS, LAST_STEP_COLOR, neop)
                     if len(pressed_buttons) > 2:
                         last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_BUTTONS, NUMBER_OF_COLUMNS)
                         if pressed_buttons[0] == LAST_STEP_BUTTONS[3]:
@@ -781,7 +779,7 @@ while True:
 
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
-                        neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                        neop[press_to_light(cc[1])] = MANUAL_CC_COLOR
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
@@ -795,21 +793,21 @@ while True:
                         if cc not in prev_manual_cc:
                             if cc[1][0] <= 1:
                                 midi.send(ControlChange(cc[0], 127))
-                                neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                                neop[press_to_light(cc[1])] = MANUAL_CC_COLOR
                             if cc[1][0] >= 2:
                                 if cc not in toggled_cc:
                                     toggled_cc.append(cc)
                                     midi.send(ControlChange(cc[0], 127))
-                                    neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = MANUAL_CC_COLOR
+                                    neop[press_to_light(cc[1])] = MANUAL_CC_COLOR
                                 else:
                                     toggled_cc.remove(cc)
                                     midi.send(ControlChange(cc[0], 0))
-                                    neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                                    neop[press_to_light(cc[1])] = NOTE_OFF
                     for cc in prev_manual_cc:
                         if cc not in manual_cc:
                             if cc[1][0] <=1:
                                 midi.send(ControlChange(cc[0], 0))
-                                neop[press_to_light(cc[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                                neop[press_to_light(cc[1])] = NOTE_OFF
                     prev_manual_cc = manual_cc
                     
                 elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
@@ -825,11 +823,11 @@ while True:
                     for note in manual_notes:
                         if note not in prev_manual_notes:
                             midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
+                            neop[press_to_light(note[1])] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
-                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                            neop[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons[-2:] == RECORD_NOTE_COMBO: 
@@ -855,11 +853,11 @@ while True:
                                         grid_note.is_on = True
                             if round(column_now) - column_now < 0:
                                 midi.send(NoteOn(note[0], 127))
-                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = RECORD_NOTE_COLOR
+                            neop[press_to_light(note[1])] = RECORD_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
                             midi.send(NoteOff(note[0], 0))
-                            neop[press_to_light(note[1], PRESS_TO_LIGHT)] = NOTE_OFF
+                            neop[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
@@ -937,7 +935,7 @@ while True:
                 
             if pressed_buttons and not combo_pressed:
                 write_save(notes, shift, last_step, axis_modes)
-                current_slot = press_to_light(pressed_buttons[0], PRESS_TO_LIGHT)
+                current_slot = press_to_light(pressed_buttons[0])
                 [ notes, shift, last_step, axis_modes ] = read_save(current_slot, notes, shift)
                 mode = b'm'
                 
@@ -952,8 +950,8 @@ while True:
             if slots: light_slots(slots, DELETE_SLOT_COLOR, neop)
             else: mode = b'm'
                 
-            if pressed_buttons and not combo_pressed and press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) in slots:
-                remove("/{}.json".format(press_to_light(pressed_buttons[0], PRESS_TO_LIGHT)))
+            if pressed_buttons and not combo_pressed and press_to_light(pressed_buttons[0]) in slots:
+                remove("/{}.json".format(press_to_light(pressed_buttons[0])))
                 mode = b'm'
                 
             if not pressed_buttons:
@@ -966,7 +964,7 @@ while True:
             fill_yes_no(CONFIRM_COLOR, DECLINE_COLOR, neop)
             
             if pressed_buttons and not combo_pressed:
-                if press_to_light(pressed_buttons[0], PRESS_TO_LIGHT) < 16:
+                if press_to_light(pressed_buttons[0]) < 16:
                     delete_all_slots()
                     current_slot = 0
                     clear_grid(notes)
