@@ -94,7 +94,7 @@ class Note(Cell):
 """
 ======== Fuctions ======== #TODO can these functions be imported from a .mpy file?
 """
-def reset_colors(nts, np, on, off=(0, 0, 0), row_offs=0, col_offs=0):
+def reset_colors(nts, np, on, off=(0, 0, 0), row_offs=0, col_offs=0): #TODO would this be faster if it called light_columns()?
     for col in nts.grid[col_offs:col_offs+8]:
         for nt in col[row_offs:row_offs+4]:
             np[nt.index] = on if nt.is_on else off
@@ -352,6 +352,7 @@ DELETE_SLOT_COLOR      = ( 191,  11,  11 )
 CONFIRM_COLOR          = (   0, 255,   0 )
 DECLINE_COLOR          = ( 255,   0,   0 )
 LAST_STEP_COLOR        = ( 255,  11, 191 )
+PATTERN_SHIFT_COLOR    = ( 255,  11,  11 )
 
 """
 Grid Parameters
@@ -380,13 +381,10 @@ DECREASE_ROW_OFFSET         	 = (1, 4)
 INCREASE_COLUMN_OFFSET	     	 = (2, 5)
 DECREASE_COLUMN_OFFSET      	 = (2, 3)
 PATTERN_SHIFT_MODE_COMBO         = [(3, 7), (0, 7)]
-SHIFT_UP                         = (3, 5) #TODO these can be combined into one tuple
-SHIFT_DOWN                       = (1, 5)
-SHIFT_LEFT                       = (2, 4)
-SHIFT_RIGHT                      = (2, 6)
+PATTERN_SHIFT_BUTTONS            = ((2, 4), (2, 6))
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
 LAST_STEP_EDIT_COMBO             = [(2, 7), (0, 7)]
-LAST_STEP_BUTTONS                = ( (1, 3), (1, 4), (1, 5), (1, 6) )
+LAST_STEP_BUTTONS                = ((1, 3), (1, 4), (1, 5), (1, 6))
 SELECT_SLOT_MODE                 = [(3, 0), (0, 0), (3, 4)]
 DELETE_SLOT_MODE                 = [(3, 0), (0, 0), (2, 4)]
 DELETE_ALL_SLOTS_MODE            = [(3, 0), (0, 0), (1, 4)]
@@ -703,18 +701,19 @@ while True:
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
                     seperate_manual_note_channel = False if seperate_manual_note_channel else True #TODO there a better way to write this
                 
-                elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO: #FEAT light up availible buttons
+                elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
+                    light_buttons(PATTERN_SHIFT_BUTTONS, PATTERN_SHIFT_COLOR, neop) #BUG lights are not resetting after relase and are reset by column while held
                     if len(pressed_buttons) > 2:
-                        if pressed_buttons[0] == SHIFT_LEFT:
+                        if pressed_buttons[0] == PATTERN_SHIFT_BUTTONS[0]:
                             notes = shift_grid_left(notes)
                             shift = shift_grid_left(shift)
                             reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                        elif pressed_buttons[0] == SHIFT_RIGHT:
+                        elif pressed_buttons[0] == PATTERN_SHIFT_BUTTONS[1]:
                             notes = shift_grid_right(notes)
                             shift = shift_grid_right(shift)
                             reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
-                elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO: #FEAT light up availible buttons
+                elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO:
                     light_buttons(LAST_STEP_BUTTONS, LAST_STEP_COLOR, neop)
                     if len(pressed_buttons) > 2:
                         last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_BUTTONS, NUMBER_OF_COLUMNS)
