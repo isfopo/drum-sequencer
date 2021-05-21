@@ -306,7 +306,7 @@ def handle_last_step_edit(lst_stp, pb, bts, cols):
         if remainder == 0: return lst_stp + 8 if lst_stp + 8 < cols else lst_stp
         else: return lst_stp + (8-remainder)
 
-def duplicate_measure(grids): #OPTIMIZE
+def duplicate_measure(grids):
     for grid in grids:
         for i, column in enumerate(grid):
             if i >= 8:
@@ -430,11 +430,11 @@ MANUAL_CC         = ( ( 22, 23, 24, 25 ),
 midi = MIDI(midi_in=ports[0], midi_out=ports[1], in_channel=0, out_channel=0)
 receive = midi.receive
 trellis = TrellisM4Express(rotation=90)
-neop = trellis.pixels._neopixel
-fill = trellis.pixels.fill
 i2c = I2C(ACCELEROMETER_SCL, ACCELEROMETER_SDA)
 accelerometer = ADXL345(i2c)
 
+neop = trellis.pixels._neopixel
+fill = trellis.pixels.fill
 
 current_slot = 0
 [ notes, shift, last_step, axis_modes ] = read_save(
@@ -450,7 +450,7 @@ pattern_select = Grid(8, 4, CORRECT_INDEX)
 #print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
 
 ticks = 0
-eighth_note = 0 #TODO is this ever used?
+eighth_note = 0
 
 old_message = None
 last_press = None
@@ -473,6 +473,8 @@ prev_manual_notes = []
 manual_cc = []
 prev_manual_cc = []
 toggled_cc = []
+
+reset_colors(notes, neop, NOTE_ON)
 
 while True:
     
@@ -538,7 +540,7 @@ while True:
         """
         Main Mode
         """
-        if mode == b'm' or b's':
+        if mode == b'm' or mode == b's':
             if pressed_buttons and not combo_pressed:
                 for note in notes.grid[pressed_buttons[0][1] + column_offset] if mode == b'm' else shift.grid[pressed_buttons[0][1] + column_offset]:
                     if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
@@ -723,7 +725,7 @@ while True:
                     print(pressed_buttons)
                     
                 button_is_held = False
-
+                
                 """
                 Edit CC Mode
                 """
@@ -822,5 +824,5 @@ while True:
     """
     if ticks != last_tick:
         handle_axes(axis_modes, accelerometer.acceleration, axis_ccs, ControlChange)
-        
+    
     last_tick = ticks
