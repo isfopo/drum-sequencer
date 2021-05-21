@@ -450,7 +450,7 @@ pattern_select = Grid(8, 4, CORRECT_INDEX)
 #print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
 
 ticks = 0
-eighth_note = 0
+eighth_note = 0 #TODO is this ever used?
 
 old_message = None
 last_press = None
@@ -496,21 +496,22 @@ while True:
             if ticks % 12 == 0:
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step + 1 == i:
+                        stop_column(notes, i-2)
+                        play_column(notes, i-1)
                         if mode == b'm':
                             move_column(i, notes, last_step, COLUMN_COLOR, NOTE_ON, ACCENT, neop, NOTE_OFF, row_offset, column_offset)
-                        play_column(notes, i-1)
-                        stop_column(notes, i-2)
                 eighth_note += 1           
             """
             Shift Grid
             """
-            if ticks % 12 == 7:
+            if ticks % 12 == 7: #TODO add shift here - should be change-able and save-able or a three grid thing
                 for i in range(NUMBER_OF_COLUMNS):
                     if eighth_note % last_step == i:
+                        stop_column(shift, i-2)
+                        play_column(shift, i-1)
                         if mode == b's':
                             move_column(i, shift, last_step, SHIFT_COLUMN_COLOR, SHIFT_NOTE_ON, SHIFT_ACCENT, neop, NOTE_OFF, row_offset, column_offset)
-                        play_column(shift, i-1)
-                        stop_column(shift, i-2)
+                        
             ticks += 1
             
         """
@@ -537,9 +538,9 @@ while True:
         """
         Main Mode
         """
-        if mode == b'm':
+        if mode == b'm' or b's':
             if pressed_buttons and not combo_pressed:
-                for note in notes.grid[pressed_buttons[0][1] + column_offset]:
+                for note in notes.grid[pressed_buttons[0][1] + column_offset] if mode == b'm' else shift.grid[pressed_buttons[0][1] + column_offset]:
                     if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
                         tick_placeholder = ticks
                         held_note = note
@@ -547,14 +548,20 @@ while True:
                         
             elif button_is_held:
                 if ticks - tick_placeholder < HOLD_TIME:
-                    neop[held_note.index] = NOTE_ON if not held_note.is_on else NOTE_OFF
+                    if mode == b'm':
+                        neop[held_note.index] = NOTE_ON if not held_note.is_on else NOTE_OFF
+                    elif mode == b's':
+                        neop[held_note.index] = SHIFT_NOTE_ON if not held_note.is_on else NOTE_OFF
                     held_note.toggle() #TODO somehting is slow here - there is a slight delay when a new note is added
                     if held_note.is_accented:
                         held_note.toggle_accent()
                     button_is_held = False
                 else:
                     if not held_note.is_on:
-                        neop[held_note.index] = ACCENT if not held_note.is_accented else NOTE_OFF
+                        if mode == b'm':
+                            neop[held_note.index] = ACCENT if not held_note.is_accented else NOTE_OFF
+                        elif mode == b's':
+                            neop[held_note.index] = SHIFT_NOTE_ON if not held_note.is_on else NOTE_OFF
                         held_note.toggle()
                     held_note.toggle_accent()
             if not pressed_buttons:
@@ -571,8 +578,8 @@ while True:
                     reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons == SHIFT_MODE_COMBO:
-                    mode = b's'
-                    reset_colors(shift, neop, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    reset_colors(shift if mode == b'm' else notes, neop, NOTE_ON if mode == b's' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                    mode = b's' if mode == b'm' else b'm'
                 
                 elif pressed_buttons == EDIT_CC_COMBO:
                     mode = b'c'
@@ -594,19 +601,19 @@ while True:
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == INCREASE_ROW_OFFSET:
                             row_offset = increase_row_offset(row_offset, NUMBER_OF_ROWS)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == DECREASE_ROW_OFFSET:
                             row_offset = decrease_row_offset(row_offset)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET:
                             column_offset = increase_column_offset(column_offset, NUMBER_OF_COLUMNS)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
                         elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET:
                             column_offset = decrease_column_offset(column_offset)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
                 elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
                     for cc in toggled_cc:
@@ -699,11 +706,11 @@ while True:
                         if pressed_buttons[0] == SHIFT_LEFT:
                             notes = shift_grid_left(notes)
                             shift = shift_grid_left(shift)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                         elif pressed_buttons[0] == SHIFT_RIGHT:
                             notes = shift_grid_right(notes)
                             shift = shift_grid_right(shift)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
+                            reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 
                 elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO: #FEAT light up availible buttons
                     light_buttons(LAST_STEP_BUTTONS, LAST_STEP_COLOR, neop)
@@ -716,173 +723,7 @@ while True:
                     print(pressed_buttons)
                     
                 button_is_held = False
-            else:
-                reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                
-            """
-            Shift Mode
-            """
-        elif mode == b's': #TODO all this "shift code" could be the same as "main code" with "or" statement
-            if pressed_buttons and not combo_pressed:
-                for note in shift.grid[pressed_buttons[0][1] + column_offset]:
-                    if note.note == pressed_buttons[0][0] + STARTING_NOTE + row_offset:
-                        tick_placeholder = ticks
-                        held_note = note
-                        button_is_held = True
-                        
-            elif button_is_held:
-                if ticks - tick_placeholder < HOLD_TIME:
-                    neop[held_note.index] = SHIFT_NOTE_ON if not held_note.is_on else NOTE_OFF
-                    held_note.toggle()
-                    if held_note.is_accented:
-                        held_note.toggle_accent()
-                    button_is_held = False
-                else:
-                    if not held_note.is_on:
-                        neop[held_note.index] = SHIFT_ACCENT if not held_note.is_accented else NOTE_OFF
-                        held_note.toggle()
-                    held_note.toggle_accent()
-            if not pressed_buttons:
-                combo_pressed = False
-            
-            """
-            Shift Combos
-            """
-            if len(pressed_buttons) > 1:
-                combo_pressed = True
-                if pressed_buttons == BACK_COMBO: #TODO don't use back combo, use the same combo as to get there
-                    mode = b'm'
-                    reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                    
-                elif pressed_buttons == CLEAR_COMBO:
-                    clear_grid(notes)
-                    clear_grid(shift)
-                    reset_colors(notes, neop, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                
-                elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO:
-                    if len(pressed_buttons) > 2:
-                        if pressed_buttons[0] == INCREASE_ROW_OFFSET:
-                            row_offset = increase_row_offset(row_offset)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                            
-                        elif pressed_buttons[0] == DECREASE_ROW_OFFSET:
-                            row_offset = decrease_row_offset(row_offset)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                            
-                        elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET:
-                            column_offset = increase_column_offset(column_offset)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                            
-                        elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET:
-                            column_offset = decrease_column_offset(column_offset)
-                            reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
 
-                elif pressed_buttons[-2:] == MANUAL_CC_COMBO:
-                    for cc in toggled_cc:
-                        neop[press_to_light(cc[1])] = MANUAL_CC_COLOR
-                    if len(pressed_buttons) > 2:
-                        manual_cc = []
-                        for button in pressed_buttons:
-                            if MANUAL_CC_COLOR.contains(button):
-                                pass
-                            else:
-                                manual_cc.append((MANUAL_CC[button[0]][button[1]], button))
-                    else:
-                        manual_cc = []
-                    for cc in manual_cc:
-                        if cc not in prev_manual_cc:
-                            if cc[1][0] <= 1:
-                                midi.send(ControlChange(cc[0], 127))
-                                neop[press_to_light(cc[1])] = MANUAL_CC_COLOR
-                            if cc[1][0] >= 2:
-                                if cc not in toggled_cc:
-                                    toggled_cc.append(cc)
-                                    midi.send(ControlChange(cc[0], 127))
-                                    neop[press_to_light(cc[1])] = MANUAL_CC_COLOR
-                                else:
-                                    toggled_cc.remove(cc)
-                                    midi.send(ControlChange(cc[0], 0))
-                                    neop[press_to_light(cc[1])] = NOTE_OFF
-                    for cc in prev_manual_cc:
-                        if cc not in manual_cc:
-                            if cc[1][0] <=1:
-                                midi.send(ControlChange(cc[0], 0))
-                                neop[press_to_light(cc[1])] = NOTE_OFF
-                    prev_manual_cc = manual_cc
-                    
-                elif pressed_buttons[-2:] == MANUAL_NOTE_COMBO: 
-                    if len(pressed_buttons) > 2:
-                        manual_notes = []
-                        for button in pressed_buttons:
-                            if button == (3, 4) or button == (0, 5):
-                                pass
-                            else:
-                                manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button))
-                    else:
-                        manual_notes = []
-                    for note in manual_notes:
-                        if note not in prev_manual_notes:
-                            midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            neop[press_to_light(note[1])] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
-                    for note in prev_manual_notes:
-                        if note not in manual_notes:
-                            midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
-                            neop[press_to_light(note[1])] = NOTE_OFF
-                    prev_manual_notes = manual_notes
-                
-                elif pressed_buttons[-2:] == RECORD_NOTE_COMBO: 
-                    if len(pressed_buttons) > 2:
-                        manual_notes = []
-                        for button in pressed_buttons:
-                            if button == (3, 5) or button == (0, 5):
-                                pass
-                            else:
-                                manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button))
-                    else:
-                        manual_notes = []
-                    for note in manual_notes:
-                        if note not in prev_manual_notes:
-                            column_now = ticks%(last_step*12)/6
-                            if round(column_now) % 2 == 0:
-                                for grid_note in notes.grid[floor(column_now/2)]:
-                                    if grid_note.note == note[0]:
-                                        grid_note.is_on = True
-                            else:
-                                for grid_note in shift.grid[floor(column_now/2)]:
-                                    if grid_note.note == note[0]:
-                                        grid_note.is_on = True
-                            if round(column_now) - column_now < 0:
-                                midi.send(NoteOn(note[0], 127))
-                            neop[press_to_light(note[1])] = RECORD_NOTE_COLOR
-                    for note in prev_manual_notes:
-                        if note not in manual_notes:
-                            midi.send(NoteOff(note[0], 0))
-                            neop[press_to_light(note[1])] = NOTE_OFF
-                    prev_manual_notes = manual_notes
-                
-                elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
-                    seperate_manual_note_channel = False if seperate_manual_note_channel else True
-                
-                elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
-                    if len(pressed_buttons) > 2:
-                        if pressed_buttons[0] == SHIFT_LEFT:
-                            notes = shift_grid_left(notes)
-                            shift = shift_grid_left(shift)
-                            reset_colors(notes, neop, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                        elif pressed_buttons[0] == SHIFT_RIGHT:
-                            notes = shift_grid_right(notes)
-                            shift = shift_grid_right(shift)
-                            reset_colors(notes, neop, SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
-                
-                elif pressed_buttons[-2:] == LAST_STEP_EDIT_COMBO:
-                    if len(pressed_buttons) > 2:
-                        last_step = handle_last_step_edit(last_step, pressed_buttons[0], LAST_STEP_BUTTONS, NUMBER_OF_COLUMNS)
-                            
-                else:
-                    print(pressed_buttons)
-                    
-                button_is_held = False
-    
                 """
                 Edit CC Mode
                 """
