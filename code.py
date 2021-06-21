@@ -92,14 +92,14 @@ class Note(Cell):
         self.is_accented = True if not self.is_accented else False
 
 """
-======== Fuctions ======== #TODO can these functions be imported from a .mpy file?
+======== Functions ======== #TODO can these functions be imported from a .mpy file?
 """
 def reset_colors(nts, np, on, off=(0, 0, 0), row_offs=0, col_offs=0): #TODO would this be faster if it called light_columns()?
     for col in nts.grid[col_offs:col_offs+8]:
         for nt in col[row_offs:row_offs+4]:
             np[nt.index] = on if nt.is_on else off
 
-def light_buttons(bts, clr, np):
+def light_buttons(bts, clr, np): 
     for bt in bts:
         np[press_to_light(bt)] = clr
 
@@ -359,7 +359,7 @@ Grid Parameters
 """
 STARTING_NOTE     = const(36)
 NUMBER_OF_COLUMNS = const(17)
-NUMBER_OF_ROWS    = const(8)
+NUMBER_OF_ROWS    = const(12) #TODO should be 16, but there are still memory allocation errors
 
 """
 Button Combonations
@@ -376,10 +376,7 @@ TOGGLE_X_COMBO                   = [(2, 0), (0, 0), (2, 1)]
 TOGGLE_Y_COMBO                   = [(2, 0), (0, 0), (2, 2)]
 TOGGLE_Z_COMBO                   = [(2, 0), (0, 0), (2, 3)]
 OFFSET_CHANGE_MODE_COMBO         = [(3, 6), (0, 6)]
-INCREASE_ROW_OFFSET              = (3, 4) #TODO these can be combined into one tuple
-DECREASE_ROW_OFFSET         	 = (1, 4)
-INCREASE_COLUMN_OFFSET	     	 = (2, 5)
-DECREASE_COLUMN_OFFSET      	 = (2, 3)
+CHANGE_OFFSET                    = [(3, 4), (1, 4), (2, 5), (2, 3)]
 PATTERN_SHIFT_MODE_COMBO         = [(3, 7), (0, 7)]
 PATTERN_SHIFT_BUTTONS            = ((2, 4), (2, 6))
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
@@ -599,19 +596,19 @@ while True:
                 
                 elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO: #FEAT light up availible buttons
                     if len(pressed_buttons) > 2:
-                        if pressed_buttons[0] == INCREASE_ROW_OFFSET:
+                        if pressed_buttons[0] == CHANGE_OFFSET[0]:
                             row_offset = increase_row_offset(row_offset, NUMBER_OF_ROWS)
                             reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
-                        elif pressed_buttons[0] == DECREASE_ROW_OFFSET:
+                        elif pressed_buttons[0] == CHANGE_OFFSET[1]:
                             row_offset = decrease_row_offset(row_offset)
                             reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
-                        elif pressed_buttons[0] == INCREASE_COLUMN_OFFSET:
+                        elif pressed_buttons[0] == CHANGE_OFFSET[2]:
                             column_offset = increase_column_offset(column_offset, NUMBER_OF_COLUMNS)
                             reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                             
-                        elif pressed_buttons[0] == DECREASE_COLUMN_OFFSET:
+                        elif pressed_buttons[0] == CHANGE_OFFSET[3]:
                             column_offset = decrease_column_offset(column_offset)
                             reset_colors(notes if mode == b'm' else shift, neop, NOTE_ON if mode == b'm' else SHIFT_NOTE_ON, NOTE_OFF, row_offset, column_offset)
                     
@@ -621,7 +618,7 @@ while True:
                     if len(pressed_buttons) > 2:
                         manual_cc = []
                         for button in pressed_buttons:
-                            if button == (3, 4) or button == (0, 4):#TODO use variables
+                            if button == MANUAL_CC_COMBO[0] or button == MANUAL_CC_COMBO[1]:
                                 pass
                             else:
                                 manual_cc.append((MANUAL_CC[button[0]][button[1]], button))
@@ -652,7 +649,7 @@ while True:
                     if len(pressed_buttons) > 2:
                         manual_notes = []
                         for button in pressed_buttons:
-                            if button == (3, 4) or button == (0, 5): #TODO use variables
+                            if button == MANUAL_NOTE_COMBO[0] or button == MANUAL_NOTE_COMBO[1]:
                                 pass
                             else:
                                 manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button))
@@ -672,8 +669,9 @@ while True:
                     if len(pressed_buttons) > 2:
                         manual_notes = []
                         for button in pressed_buttons:
-                            if button == (3, 5) or button == (0, 5): #TODO use variables
+                            if button == RECORD_NOTE_COMBO[0] or button == RECORD_NOTE_COMBO[1]:
                                 pass
+                            elif button[1] > 3: pass
                             else:
                                 manual_notes.append((MANUAL_NOTES[button[0]][button[1]], button)) #ERROR if button pressed in on second half for board
                     else:
@@ -699,7 +697,7 @@ while True:
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
-                    seperate_manual_note_channel = False if seperate_manual_note_channel else True #TODO there a better way to write this
+                    seperate_manual_note_channel = False if seperate_manual_note_channel else True
                 
                 elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
                     light_buttons(PATTERN_SHIFT_BUTTONS, PATTERN_SHIFT_COLOR, neop) #BUG lights are not resetting after relase and are reset by column while held
