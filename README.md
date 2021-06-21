@@ -42,27 +42,27 @@ The NeoTrellis is equipped with a built-in accelerometer, which is able to send 
 
 - Direct Mode:
   - the CC value (0-127) directly corresponds with the value of the axis.
-  - (CCs: X - 3, Y - 14, Z - 20)
+  - CCs: X - 3, Y - 14, Z - 20
   - 2nd column
 - Flip Mode:
   - the CC value (0-127) corresponds negatively with the value of the axis.
-  - (CCs: X - 3, Y - 14, Z - 20)
+  - CCs: X - 3, Y - 14, Z - 20
   - 3rd column
 - Split Mode:
   - the axis is split in two, above halfway will send data on one CC, below the other.
-  - (CCs: X - 3 and 4, Y - 14 and 15, Z - 20 and 21)
+  - CCs: X - 3 and 4, Y - 14 and 15, Z - 20 and 21
   - 4th column
 - On Off Mode:
   - the CC value is either 0 or 127 depending on the half of the axis.
-  - (CCs: X - 3, Y - 14, Z - 20)
+  - CCs: X - 3, Y - 14, Z - 20
   - 5th column
 - On Off Flip Mode:
   - the CC value is either 0 or 127 depending on the half of the axis but flipped from "On Off Mode".
-  - (CCs: X - 3, Y - 14, Z - 20)
+  - CCs: X - 3, Y - 14, Z - 20
   - 6th column
 - On Off Split Mode:
   - the CC value is either 0 or 127, but split at half of the axis.
-  - (CCs: X - 3 and 4, Y - 14 and 15, Z - 20 and 21)
+  - CCs: X - 3 and 4, Y - 14 and 15, Z - 20 and 21
   - 7th column
 - None:
   - no CC data will be sent for this axis.

@@ -4,7 +4,6 @@ from board import ACCELEROMETER_SDA
 from busio import I2C
 from json import loads
 from json import dumps
-from gc import collect
 from os import listdir
 from os import remove
 from micropython import const
@@ -27,33 +26,33 @@ from adafruit_midi.control_change import ControlChange
 
 class Grid:
     __slots__ = ["grid"]
-    def __init__(self, columns, rows, correction):
-            index = 0
-            grid = []
-            for i in range(columns):
-                column = []
-                for j in range(rows):
-                    if j % 4 == 0: index = 0
-                    column.append(Cell(correct_index(index, i, CORRECT_INDEX)))
-                    index += 1
-                grid.append(tuple(column))
-            self.grid = tuple(grid)
+    def __init__(self, columns, rows):
+        index = 0
+        grid = []
+        for i in range(columns):
+            column = []
+            for j in range(rows):
+                if j % 4 == 0: index = 0
+                column.append(Cell(correct_index(index, i, CORRECT_INDEX)))
+                index += 1
+            grid.append(tuple(column))
+        self.grid = tuple(grid)
 
 class NoteGrid:
     __slots__ = ["grid"]
     def __init__(self, columns, rows, starting_note, send):
-            index = 0
-            grid = []
-            for i in range(columns):
-                column = []
-                note = starting_note
-                for j in range(rows):
-                    if j % 4 == 0: index = 0
-                    column.append(Note(note, correct_index(index, i, CORRECT_INDEX), send))
-                    index += 1
-                    note += 1
-                grid.append(tuple(column))
-            self.grid = tuple(grid)
+        index = 0
+        grid = []
+        for i in range(columns):
+            column = []
+            note = starting_note
+            for j in range(rows):
+                if j % 4 == 0: index = 0
+                column.append(Note(note, correct_index(index, i, CORRECT_INDEX), send))
+                index += 1
+                note += 1
+            grid.append(tuple(column))
+        self.grid = tuple(grid)
 
 class Cell:
     __slots__ = ["index", "is_on"]
@@ -120,26 +119,26 @@ def stop_column(nts, col):
     r = range(len(col))
     for i in r: col[i].stop()
 
-def move_column(indx, grd, lst_stp, col_clr, on, acct, np, off=(0, 0, 0), row_offs=0, col_offs=0):
-    if indx % 8 == 0:
+def move_column(i, grd, lst_stp, col_clr, on, acct, np, off=(0, 0, 0), row_offs=0, col_offs=0):
+    if i % 8 == 0:
         if column_offset == lst_stp+1 - 8:
-            if indx == 0:
+            if i == 0:
                 light_column(7, col_clr, np)
                 reset_column(grd, row_offs, 6, on, off, acct, np) #BUG last column hangs up in shift mode
             
         else:
-            if col_offs < indx <= col_offs + 8:
+            if col_offs < i <= col_offs + 8:
                 light_column(7, col_clr, np)
                 reset_column(grd, row_offs, col_offs + 6, on, off, acct, np)
     else:
-        if indx % 8 == 1:
+        if i % 8 == 1:
             reset_column(grd, row_offs, col_offs + 7, on, off, acct, np)
             
-        if col_offs <= indx < col_offs + 8:
-            light_column((indx-1)%8, col_clr, np)
-            reset_column(grd, row_offs, (indx-2), on, off, acct, np)
+        if col_offs <= i < col_offs + 8:
+            light_column((i-1)%8, col_clr, np)
+            reset_column(grd, row_offs, (i-2), on, off, acct, np)
             
-    if indx == 1:
+    if i == 1:
         reset_column(grd, row_offs, col_offs + 7, on, off, acct, np)
         reset_column(grd, row_offs, (lst_stp-1)%8, on, off, acct, np)
 
@@ -159,7 +158,7 @@ def scale(val, src, dst):
 def correct_index(index, i, ci):
     return ci[index+((i%8)*4)]
 
-def press_to_light(btn): #TODO should p2l be stored here?
+def press_to_light(btn):
     return  ( ( 24, 25, 26, 27, 28, 29, 30, 31 ),
               ( 16, 17, 18, 19, 20, 21, 22, 23 ),
               (  8,  9, 10, 11, 12, 13, 14, 15 ),
@@ -326,6 +325,9 @@ def delete_all_slots():
         try: remove("/{}.json".format(i))
         except OSError: pass
 
+def print_grid(grid):
+    print(list(map(lambda x: list(map(lambda y: y.index, x)), grid.grid)))
+    
     
 """
 ======== Constants ========
@@ -434,10 +436,8 @@ current_slot = 0
     )
 #TODO can notes and shift be combined into a single tuple?
 #TODO can there be a third note grid to make a triplet/swing feel?
-cc_edit = Grid(8, 4, CORRECT_INDEX)
-pattern_select = Grid(8, 4, CORRECT_INDEX)
-
-#print(list(map(lambda x: list(map(lambda y: y.index, x)), notes.grid))) # prints note grid to show notes
+cc_edit = Grid(8, 4)
+pattern_select = Grid(8, 4)
 
 ticks = 0
 eighth_note = 0
