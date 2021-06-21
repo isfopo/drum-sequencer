@@ -367,14 +367,9 @@ Button Combonations
 MANUAL_CC_COMBO                  = [(3, 4), (0, 4)]
 MANUAL_NOTE_COMBO                = [(3, 4), (0, 5)]
 RECORD_NOTE_COMBO                = [(3, 5), (0, 5)]
-BACK_COMBO                       = [(3, 0), (0, 0), (3, 7)]
 CLEAR_COMBO                      = [(3, 0), (0, 0), (3, 1)]
 SHIFT_MODE_COMBO                 = [(3, 0), (0, 0), (3, 2)]
 EDIT_CC_COMBO                    = [(3, 0), (0, 0), (3, 3)]
-EDIT_CC_BACK                     = [(3, 0), (3, 1), (3, 7)]
-TOGGLE_X_COMBO                   = [(2, 0), (0, 0), (2, 1)]
-TOGGLE_Y_COMBO                   = [(2, 0), (0, 0), (2, 2)]
-TOGGLE_Z_COMBO                   = [(2, 0), (0, 0), (2, 3)]
 OFFSET_CHANGE_MODE_COMBO         = [(3, 6), (0, 6)]
 CHANGE_OFFSET                    = [(3, 4), (1, 4), (2, 5), (2, 3)]
 PATTERN_SHIFT_MODE_COMBO         = [(3, 7), (0, 7)]
@@ -757,7 +752,7 @@ while True:
             Edit CC Combos
             """
             if len(pressed_buttons) > 2:
-                if pressed_buttons == EDIT_CC_BACK:
+                if pressed_buttons == EDIT_CC_COMBO:
                     mode = b'm'
                     reset_colors(notes, neop, NOTE_ON, NOTE_OFF, row_offset, column_offset)
                 else:
