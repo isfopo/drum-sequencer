@@ -387,7 +387,7 @@ Integers
 HOLD_TIME = const(24) #in ticks
 
 """
-Axis cc's
+Axis CCs
 """
 axis_ccs = (3, 9, 14, 15, 20, 21)
 
