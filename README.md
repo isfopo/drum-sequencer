@@ -38,7 +38,7 @@ To enter "Shift Mode" press these 3 buttons at the same time. You will see the c
 |     |     |     |     |     |     |     |     |
 | x   |     |     |     |     |     |     |     |
 
-The NeoTrellis is equipped with a built-in accelerometer, which is able to send MIDI Control Change data to your DAW based on the position of the unit. The accelerometer tracks the X, Y and Z axes and will send CC data on CCs 3, 9, 14, 15, 20, 21 depending on the mode. There are 6 different modes, with the option of sending no CC data for the axis, and each axis can be set independency. To select a CC mode while in the CC Edit Mode, press the buttons of the corresponding CC mode in either the second row for X, third row for Y or fourth row for Z.
+The NeoTrellis is equipped with a built-in accelerometer, which is able to send MIDI Control Change data to your DAW based on the position of the unit. The accelerometer tracks the X, Y and Z axes and will send CC data on CCs 3, 9, 14, 15, 20, 21 depending on the mode. There are 6 different modes, with the option of sending no CC data for the axis, and each axis can be set independency. To select a CC mode while in the CC Edit Mode, press the buttons of the corresponding CC mode in either the second row for X, third row for Y or fourth row for Z. To exit this mode, press the same button combo.
 
 - Direct Mode:
   - the CC value (0-127) directly corresponds with the value of the axis.
