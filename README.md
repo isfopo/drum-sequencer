@@ -85,7 +85,7 @@ The NeoTrellis is equipped with a built-in accelerometer, which is able to send 
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | D3  | A#2 | F#2 | D2  |     |     |     |     |
 | C#3 | A2  | F2  | C#2 |     |     |     |     |
-| C3  | G#2 | E2  | C2  |  x  |     |     |     |
+| C3  | G#2 | E2  | C2  |     |  x  |     |     |
 
 Holding the two button marked with an "x" and any button on the left half of the grid will result in a Midi note of the corresponding value to be triggered. Because there is the pads are not velocity sensitive, all note on events will have velocity of 127 when the button is pressed and 0 when it is released. Buttons should light up when played. This is a momentary mode and will no longer be in effect when the two buttons are released.
 
@@ -98,3 +98,13 @@ Holding the two button marked with an "x" and any button on the left half of the
 |     |  x  |     |     |     |     |     |     |
 
 This combonation toggles if notes played in manual note mode are played in the same channel as the main sequence (channel 1 by default) or in a different channel (channel 2).
+
+### Manual CC Mode
+
+| 22  | 23  | 24  | 25  |  x  |     |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 26  | 27  | 28  | 29  |     |     |     |     |
+| 30  | 31  | 85  | 86  |     |     |     |     |
+| 87  | 88  | 89  | 90  |  x  |     |     |     |
+
+Holding the two button marked with an "x" and any button on the left half of the grid will result in a Midi note of the corresponding value to be triggered. The top half of the left half toggle between 0 and 127, the rest are momentary, sending 127 on press and 0 on release.
