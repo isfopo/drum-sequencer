@@ -30,6 +30,17 @@ Each column corresponds to an eighth-note step in the sequence, starting at the 
 
 To enter "Shift Mode" press these 3 buttons at the same time. You will see the colors shift and the grid change to whatever notes are in the shift grid. This is another set of notes that wil play along with the main grid and work the same way, however these note are shifted over a 16th note. To exit this mode, press the same button combo.
 
+
+### Clear
+
+| x   | x   |     |     |     |     |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|     |     |     |     |     |     |     |     |
+|     |     |     |     |     |     |     |     |
+| x   |     |     |     |     |     |     |     |
+
+Pressing this combonation will remove all notes on both the main and shift grids, leaving you with a blank slate.
+
 ### Edit CC Mode
 
 | x   |     |     | x   |     |     |     |     |
@@ -67,3 +78,23 @@ The NeoTrellis is equipped with a built-in accelerometer, which is able to send 
 - None:
   - no CC data will be sent for this axis.
   - 8th column
+
+### Manual Note Mode
+
+| D#3 | B2  | G2  | D#2 |  x  |     |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| D3  | A#2 | F#2 | D2  |     |     |     |     |
+| C#3 | A2  | F2  | C#2 |     |     |     |     |
+| C3  | G#2 | E2  | C2  |  x  |     |     |     |
+
+Holding the two button marked with an "x" and any button on the left half of the grid will result in a Midi note of the corresponding value to be triggered. Because there is the pads are not velocity sensitive, all note on events will have velocity of 127 when the button is pressed and 0 when it is released. Buttons should light up when played. This is a momentary mode and will no longer be in effect when the two buttons are released.
+
+### Change Manual Note Channel
+
+|     |  x  |     |     |     |     |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|     |  x  |     |     |     |     |     |     |
+|     |     |     |     |     |     |     |     |
+|     |  x  |     |     |     |     |     |     |
+
+This combonation toggles if notes played in manual note mode are played in the same channel as the main sequence (channel 1 by default) or in a different channel (channel 2).
