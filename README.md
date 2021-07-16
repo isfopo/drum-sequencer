@@ -99,6 +99,16 @@ Holding the two button marked with an "x" and any button on the left half of the
 
 This combonation toggles if notes played in manual note mode are played in the same channel as the main sequence (channel 1 by default) or in a different channel (channel 2).
 
+### Record Note Mode
+
+| D#3 | B2  | G2  | D#2 |     |  x  |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| D3  | A#2 | F#2 | D2  |     |     |     |     |
+| C#3 | A2  | F2  | C#2 |     |     |     |     |
+| C3  | G#2 | E2  | C2  |     |  x  |     |     |
+
+This mode work similarly to manual note mode - hold down the two buttons and press the left half to trigger a note - however playing a note in this will also add it to the sequence, quantized to the beat you played it on.
+
 ### Manual CC Mode
 
 | 22  | 23  | 24  | 25  |  x  |     |     |     |
@@ -108,3 +118,14 @@ This combonation toggles if notes played in manual note mode are played in the s
 | 87  | 88  | 89  | 90  |  x  |     |     |     |
 
 Holding the two button marked with an "x" and any button on the left half of the grid will result in a Midi note of the corresponding value to be triggered. The top half of the left half toggle between 0 and 127, the rest are momentary, sending 127 on press and 0 on release.
+
+
+### Select Slot Mode
+
+|  x  |     |     |     |  x  |     |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|     |     |     |     |     |     |     |     |
+|     |     |     |     |     |     |     |     |
+|  x  |     |     |     |     |     |     |     |
+
+This mode allows you to switch between and save different patterns. A pattern can be saved in 16 different slots, represented by the 16 buttons on the left side of the board. To swtich patterns, enter this mode and press any of the slot buttons, causing the pattern to be played instantly. A slot that is empty, with no pattern in it, is not lit, whereas if there is a pettern in the slot it is lit. Switching to any other slot will cause the current pattern to be saved in the current slot.
