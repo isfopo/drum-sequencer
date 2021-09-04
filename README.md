@@ -130,12 +130,20 @@ This mode allows you to switch between and save different patterns. A pattern ca
 
 ### Delete Slot Mode
 
-|  x  |     |     |     |     |     |     |     |
+| x   |     |     |     |     |     |     |     |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |     |     |     |     | x   |     |     |     |
 |     |     |     |     |     |     |     |     |
-|  x  |     |     |     |     |     |     |     |
+| x   |     |     |     |     |     |     |     |
 
 This mode allows you to delete a pattern that has been previously saved. In this mode, the slots will light up red, indicating that you will delete this slot. After selecting a slot to delete, you will return to the Main Mode.
 
+### Delete All Slots Mode
 
+| x   |     |     |     |     |     |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|     |     |     |     |     |     |     |     |
+|     |     |     |     | x   |     |     |     |
+| x   |     |     |     |     |     |     |     |
+
+This mode allows you to delete all of the slots save on the device. If this mode is engaged, the grid will light up with green and red lights. If you press any green light, all slots will be deleted. If you press the red, nothing will happen. Either selecting will return you to the Main Mode.
