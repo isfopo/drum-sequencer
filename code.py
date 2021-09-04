@@ -91,9 +91,9 @@ class Note(Cell):
         self.is_accented = True if not self.is_accented else False
 
 """
-======== Functions ======== #TODO can these functions be imported from a .mpy file?
+======== Functions ========
 """
-def reset_colors(nts, np, on, off=(0, 0, 0), row_offs=0, col_offs=0): #TODO would this be faster if it called light_columns()?
+def reset_colors(nts, np, on, off=(0, 0, 0), row_offs=0, col_offs=0):
     for col in nts.grid[col_offs:col_offs+8]:
         for nt in col[row_offs:row_offs+4]:
             np[nt.index] = on if nt.is_on else off
@@ -197,7 +197,7 @@ def handle_cc_grid(cc_edit, modes, offset):
         if mode == b'o':  cc_edit.grid[4][offset].is_on = True
         if mode == b'fo': cc_edit.grid[5][offset].is_on = True
         if mode == b'so': cc_edit.grid[6][offset].is_on = True
-        if mode == None:  cc_edit.grid[7][offset].is_on = True
+        if mode == None: cc_edit.grid[7][offset].is_on = True
         offset -= 1
 
 def handle_select_mode(pb):
