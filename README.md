@@ -30,7 +30,6 @@ Each column corresponds to an eighth-note step in the sequence, starting at the 
 
 To enter "Shift Mode" press these 3 buttons at the same time. You will see the colors shift and the grid change to whatever notes are in the shift grid. This is another set of notes that wil play along with the main grid and work the same way, however these note are shifted over a 16th note. To exit this mode, press the same button combo.
 
-
 ### Clear
 
 | x   | x   |     |     |     |     |     |     |
@@ -81,51 +80,62 @@ The NeoTrellis is equipped with a built-in accelerometer, which is able to send 
 
 ### Manual Note Mode
 
-| D#3 | B2  | G2  | D#2 |  x  |     |     |     |
+| D#3 | B2  | G2  | D#2 | x   |     |     |     |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | D3  | A#2 | F#2 | D2  |     |     |     |     |
 | C#3 | A2  | F2  | C#2 |     |     |     |     |
-| C3  | G#2 | E2  | C2  |     |  x  |     |     |
+| C3  | G#2 | E2  | C2  |     | x   |     |     |
 
 Holding the two button marked with an "x" and any button on the left half of the grid will result in a Midi note of the corresponding value to be triggered. Because there is the pads are not velocity sensitive, all note on events will have velocity of 127 when the button is pressed and 0 when it is released. Buttons should light up when played. This is a momentary mode and will no longer be in effect when the two buttons are released.
 
 ### Change Manual Note Channel
 
-|     |  x  |     |     |     |     |     |     |
+|     | x   |     |     |     |     |     |     |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|     |  x  |     |     |     |     |     |     |
+|     | x   |     |     |     |     |     |     |
 |     |     |     |     |     |     |     |     |
-|     |  x  |     |     |     |     |     |     |
+|     | x   |     |     |     |     |     |     |
 
 This combination toggles if notes played in manual note mode are played in the same channel as the main sequence (channel 1 by default) or in a different channel (channel 2).
 
 ### Record Note Mode
 
-| D#3 | B2  | G2  | D#2 |     |  x  |     |     |
+| D#3 | B2  | G2  | D#2 |     | x   |     |     |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | D3  | A#2 | F#2 | D2  |     |     |     |     |
 | C#3 | A2  | F2  | C#2 |     |     |     |     |
-| C3  | G#2 | E2  | C2  |     |  x  |     |     |
+| C3  | G#2 | E2  | C2  |     | x   |     |     |
 
 This mode work similarly to manual note mode - hold down the two buttons and press the left half to trigger a note - however playing a note in this will also add it to the sequence, quantized to the beat you played it on.
 
 ### Manual CC Mode
 
-| 22  | 23  | 24  | 25  |  x  |     |     |     |
+| 22  | 23  | 24  | 25  | x   |     |     |     |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 26  | 27  | 28  | 29  |     |     |     |     |
 | 30  | 31  | 85  | 86  |     |     |     |     |
-| 87  | 88  | 89  | 90  |  x  |     |     |     |
+| 87  | 88  | 89  | 90  | x   |     |     |     |
 
 Holding the two button marked with an "x" and any button on the left half of the grid will result in a Midi note of the corresponding value to be triggered. The top half of the left half toggle between 0 and 127, the rest are momentary, sending 127 on press and 0 on release.
 
-
 ### Select Slot Mode
 
-|  x  |     |     |     |  x  |     |     |     |
+| x   |     |     |     | x   |     |     |     |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |     |     |     |     |     |     |     |     |
 |     |     |     |     |     |     |     |     |
-|  x  |     |     |     |     |     |     |     |
+| x   |     |     |     |     |     |     |     |
 
 This mode allows you to switch between and save different patterns. A pattern can be saved in 16 different slots, represented by the 16 buttons on the left side of the board. To switch patterns, enter this mode and press any of the slot buttons, causing the pattern to be played instantly. A slot that is empty, with no pattern in it, is not lit, whereas if there is a pattern in the slot it is lit. Switching to any other slot will cause the current pattern to be saved in the current slot.
+
+### Delete Slot Mode
+
+|  x  |     |     |     |     |     |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|     |     |     |     | x   |     |     |     |
+|     |     |     |     |     |     |     |     |
+|  x  |     |     |     |     |     |     |     |
+
+This mode allows you to delete a pattern that has been previously saved. In this mode, the slots will light up red, indicating that you will delete this slot. After selecting a slot to delete, you will return to the Main Mode.
+
+
