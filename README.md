@@ -39,7 +39,7 @@ To enter "Shift Mode" press these 3 buttons at the same time. You will see the c
 |     |     |     |     |     |     |     |     |
 | x   |     |     |     |     |     |     |     |
 
-Pressing this combonation will remove all notes on both the main and shift grids, leaving you with a blank slate.
+Pressing this combination will remove all notes on both the main and shift grids, leaving you with a blank slate.
 
 ### Edit CC Mode
 
@@ -97,7 +97,7 @@ Holding the two button marked with an "x" and any button on the left half of the
 |     |     |     |     |     |     |     |     |
 |     |  x  |     |     |     |     |     |     |
 
-This combonation toggles if notes played in manual note mode are played in the same channel as the main sequence (channel 1 by default) or in a different channel (channel 2).
+This combination toggles if notes played in manual note mode are played in the same channel as the main sequence (channel 1 by default) or in a different channel (channel 2).
 
 ### Record Note Mode
 
@@ -128,4 +128,4 @@ Holding the two button marked with an "x" and any button on the left half of the
 |     |     |     |     |     |     |     |     |
 |  x  |     |     |     |     |     |     |     |
 
-This mode allows you to switch between and save different patterns. A pattern can be saved in 16 different slots, represented by the 16 buttons on the left side of the board. To swtich patterns, enter this mode and press any of the slot buttons, causing the pattern to be played instantly. A slot that is empty, with no pattern in it, is not lit, whereas if there is a pettern in the slot it is lit. Switching to any other slot will cause the current pattern to be saved in the current slot.
+This mode allows you to switch between and save different patterns. A pattern can be saved in 16 different slots, represented by the 16 buttons on the left side of the board. To switch patterns, enter this mode and press any of the slot buttons, causing the pattern to be played instantly. A slot that is empty, with no pattern in it, is not lit, whereas if there is a pattern in the slot it is lit. Switching to any other slot will cause the current pattern to be saved in the current slot.
