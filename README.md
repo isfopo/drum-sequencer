@@ -165,6 +165,7 @@ Left and right will shift left and right eight columns, changing the visible gri
 ### Pattern Shift Mode
 
 |     |     |     |     |     |     |     | x   |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 |     |     |     |     | <   |     | >   |     |
 |     |     |     |     |     |     |     |     |
 |     |     |     |     |     |     |     | x   |
