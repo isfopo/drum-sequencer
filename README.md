@@ -156,7 +156,7 @@ This mode allows you to delete all of the slots save on the device. If this mode
 |     |     |     |     | v   |     |     |     |
 |     |     |     |     |     |     | x   |     |
 
-This mode changes the parts of the sequence the visible gid represents. This mode, like a few others, works in two parts. First, hold the two button marked with x's, then press any of the the buttons marked with up, down, left or right carets. 
+This mode changes the parts of the sequence the visible grid represents. This mode, like a few others, works in two parts. First, hold the two button marked with x's, then press any of the the buttons marked with up, down, left or right carets. 
 
 Up and down will allow you to shift up and down four rows, changing the visible grid to the next or previous four midi notes, if pressing up, or the previous four notes. This will not extend beyond notes C2 to D3#.
 
@@ -171,3 +171,18 @@ Left and right will shift left and right eight columns, changing the visible gri
 |     |     |     |     |     |     |     | x   |
 
 This mode allows you to shift the entire pattern by eighth notes either forwards or back. To do so, hold the two buttons marked by x's, then press either the button marked left or right. Left will shift the pattern back one eighth note, with the first eighth note wrapping around to the end, and right will shift the pattern forward one eighth note, with the last eighth note wrapping around to the first.
+
+
+### Last Step Mode
+
+|     |     |     |     |     |     |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|     |     |     |     |     |     |     | x   |
+|     |     |     | <<  | <   | >   | >>  |     |
+|     |     |     |     |     |     |     | x   |
+
+This mode allows you to edit the last step, or the last eighth note before the pattern repeats, of the pattern. This will allow for odd time signatures or isometric rhythms. To do so, hold the two buttons marked by x's, then press the buttons marked by carets. 
+
+The buttons to the left will shorten then pattern. The single caret will shorten the pattern by one step, or eighth note, and the double caret will shorten the pattern by a measure. The shortest the pattern can be is a single eighth note. 
+
+Conversely, the buttons to the right will lengthen the pattern in the same manner. The single caret will extend the pattern by one step and the double caret will extend the pattern by a measure. The longest a pattern can be is four measures. 
