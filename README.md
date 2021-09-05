@@ -116,7 +116,7 @@ This mode work similarly to manual note mode - hold down the two buttons and pre
 | 30  | 31  | 85  | 86  |     |     |     |     |
 | 87  | 88  | 89  | 90  | x   |     |     |     |
 
-Holding the two button marked with an "x" and any button on the left half of the grid will result in a Midi note of the corresponding value to be triggered. The top half of the left half toggle between 0 and 127, the rest are momentary, sending 127 on press and 0 on release.
+Holding the two buttons marked with an "x" and any button on the left half of the grid will result in a Midi note of the corresponding value to be triggered. The top half of the left half toggle between 0 and 127, the rest are momentary, sending 127 on press and 0 on release.
 
 ### Select Slot Mode
 
@@ -147,3 +147,17 @@ This mode allows you to delete a pattern that has been previously saved. In this
 | x   |     |     |     |     |     |     |     |
 
 This mode allows you to delete all of the slots save on the device. If this mode is engaged, the grid will light up with green and red lights. If you press any green light, all slots will be deleted. If you press the red, nothing will happen. Either selecting will return you to the Main Mode.
+
+### Change Offset Mode
+
+|     |     |     |     | ^   |     | x   |     |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|     |     |     | <   |     | >   |     |     |
+|     |     |     |     | v   |     |     |     |
+|     |     |     |     |     |     | x   |     |
+
+This mode changes the parts of the sequence the visible gid represents. This mode, like a few others, works in two parts. First, hold the two button marked with x's, then press any of the the buttons marked with up, down, left or right carets. 
+
+Up and down will allow you to shift up and down four rows, changing the visible grid to the next or previous four midi notes, if pressing up, or the previous four notes. This will not extend beyond notes C2 to D3#.
+
+Left and right will shift left and right eight columns, changing the visible grid to the next or previous measure, given that you are in 4/4 time. If another measure is not within the last step, the grid will not change.
