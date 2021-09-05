@@ -90,11 +90,11 @@ Holding the two button marked with an "x" and any button on the left half of the
 
 ### Change Manual Note Channel
 
-|     | x   |     |     |     |     |     |     |
+|     |     |     |     | x   |     |     |     |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|     | x   |     |     |     |     |     |     |
+|     |     |     |     | x   |     |     |     |
 |     |     |     |     |     |     |     |     |
-|     | x   |     |     |     |     |     |     |
+|     |     |     |     |     | x   |     |     |
 
 This combination toggles if notes played in manual note mode are played in the same channel as the main sequence (channel 1 by default) or in a different channel (channel 2).
 
