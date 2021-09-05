@@ -366,22 +366,22 @@ NUMBER_OF_ROWS    = const(12) #TODO should be 16, but there are still memory all
 """
 Button Combonations
 """
-MANUAL_CC_COMBO                  = [(3, 4), (0, 4)]
-MANUAL_NOTE_COMBO                = [(3, 4), (0, 5)]
-RECORD_NOTE_COMBO                = [(3, 5), (0, 5)]
-CLEAR_COMBO                      = [(3, 0), (0, 0), (3, 1)]
-SHIFT_MODE_COMBO                 = [(3, 0), (0, 0), (3, 2)]
-EDIT_CC_COMBO                    = [(3, 0), (0, 0), (3, 3)]
-OFFSET_CHANGE_MODE_COMBO         = [(3, 6), (0, 6)]
-CHANGE_OFFSET                    = [(3, 4), (1, 4), (2, 5), (2, 3)]
-PATTERN_SHIFT_MODE_COMBO         = [(3, 7), (0, 7)]
-PATTERN_SHIFT_BUTTONS            = ((2, 4), (2, 6))
-CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)]
-LAST_STEP_EDIT_COMBO             = [(2, 7), (0, 7)]
-LAST_STEP_BUTTONS                = ((1, 3), (1, 4), (1, 5), (1, 6))
-SELECT_SLOT_MODE                 = [(3, 0), (0, 0), (3, 4)]
-DELETE_SLOT_MODE                 = [(3, 0), (0, 0), (2, 4)]
-DELETE_ALL_SLOTS_MODE            = [(3, 0), (0, 0), (1, 4)]
+MANUAL_CC_COMBO                  = [(3, 4), (0, 4)] #
+MANUAL_NOTE_COMBO                = [(3, 4), (0, 5)] #
+RECORD_NOTE_COMBO                = [(3, 5), (0, 5)] #
+CLEAR_COMBO                      = [(3, 0), (0, 0), (3, 1)] #
+SHIFT_MODE_COMBO                 = [(3, 0), (0, 0), (3, 2)] #
+EDIT_CC_COMBO                    = [(3, 0), (0, 0), (3, 3)] #
+OFFSET_CHANGE_MODE_COMBO         = [(3, 6), (0, 6)] #
+CHANGE_OFFSET                    = [(3, 4), (1, 4), (2, 5), (2, 3)] #
+PATTERN_SHIFT_MODE_COMBO         = [(3, 7), (0, 7)] #
+PATTERN_SHIFT_BUTTONS            = ((2, 4), (2, 6)) #
+CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)] 
+LAST_STEP_EDIT_COMBO             = [(2, 7), (0, 7)] #
+LAST_STEP_BUTTONS                = ((1, 3), (1, 4), (1, 5), (1, 6)) #
+SELECT_SLOT_MODE                 = [(3, 0), (0, 0), (3, 4)] #
+DELETE_SLOT_MODE                 = [(3, 0), (0, 0), (2, 4)] #
+DELETE_ALL_SLOTS_MODE            = [(3, 0), (0, 0), (1, 4)] #
 
 """
 Integers
@@ -451,7 +451,7 @@ tick_placeholder = None
 button_is_held = False
 combo_pressed = False
 manual_is_pressed = False
-seperate_manual_note_channel = False
+separate_manual_note_channel = False
 
 row_offset = 0
 column_offset = 0
@@ -544,7 +544,7 @@ while True:
                         neop[held_note.index] = NOTE_ON if not held_note.is_on else NOTE_OFF
                     elif mode == b's':
                         neop[held_note.index] = SHIFT_NOTE_ON if not held_note.is_on else NOTE_OFF
-                    held_note.toggle() #TODO somehting is slow here - there is a slight delay when a new note is added
+                    held_note.toggle() #TODO something is slow here - there is a slight delay when a new note is added
                     if held_note.is_accented:
                         held_note.toggle_accent()
                     button_is_held = False
@@ -589,7 +589,7 @@ while True:
                     mode = b'da'
                     fill(NOTE_OFF)
                 
-                elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO: #FEAT light up availible buttons
+                elif pressed_buttons[-2:] == OFFSET_CHANGE_MODE_COMBO: #FEAT light up available buttons
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == CHANGE_OFFSET[0]:
                             row_offset = increase_row_offset(row_offset, NUMBER_OF_ROWS)
@@ -652,11 +652,11 @@ while True:
                         manual_notes = []
                     for note in manual_notes:
                         if note not in prev_manual_notes:
-                            midi.send(NoteOn(note[0], 127), channel=1 if seperate_manual_note_channel else 0)
-                            neop[press_to_light(note[1])] = MANUAL_NOTE_COLOR_ALT if seperate_manual_note_channel else MANUAL_NOTE_COLOR
+                            midi.send(NoteOn(note[0], 127), channel=1 if separate_manual_note_channel else 0)
+                            neop[press_to_light(note[1])] = MANUAL_NOTE_COLOR_ALT if separate_manual_note_channel else MANUAL_NOTE_COLOR
                     for note in prev_manual_notes:
                         if note not in manual_notes:
-                            midi.send(NoteOff(note[0], 0), channel=1 if seperate_manual_note_channel else 0)
+                            midi.send(NoteOff(note[0], 0), channel=1 if separate_manual_note_channel else 0)
                             neop[press_to_light(note[1])] = NOTE_OFF
                     prev_manual_notes = manual_notes
                     
@@ -692,10 +692,10 @@ while True:
                     prev_manual_notes = manual_notes
                 
                 elif pressed_buttons == CHANGE_MANUAL_NOTE_CHANNEL_COMBO:
-                    seperate_manual_note_channel = False if seperate_manual_note_channel else True
+                    separate_manual_note_channel = False if separate_manual_note_channel else True
                 
                 elif pressed_buttons[-2:] == PATTERN_SHIFT_MODE_COMBO:
-                    light_buttons(PATTERN_SHIFT_BUTTONS, PATTERN_SHIFT_COLOR, neop) #BUG lights are not resetting after relase and are reset by column while held
+                    light_buttons(PATTERN_SHIFT_BUTTONS, PATTERN_SHIFT_COLOR, neop) #BUG lights are not resetting after release and are reset by column while held
                     if len(pressed_buttons) > 2:
                         if pressed_buttons[0] == PATTERN_SHIFT_BUTTONS[0]:
                             notes = shift_grid_left(notes)
