@@ -366,22 +366,22 @@ NUMBER_OF_ROWS    = const(12) #TODO should be 16, but there are still memory all
 """
 Button Combonations
 """
-MANUAL_CC_COMBO                  = [(3, 4), (0, 4)] #
-MANUAL_NOTE_COMBO                = [(3, 4), (0, 5)] #
-RECORD_NOTE_COMBO                = [(3, 5), (0, 5)] #
-CLEAR_COMBO                      = [(3, 0), (0, 0), (3, 1)] #
-SHIFT_MODE_COMBO                 = [(3, 0), (0, 0), (3, 2)] #
-EDIT_CC_COMBO                    = [(3, 0), (0, 0), (3, 3)] #
-OFFSET_CHANGE_MODE_COMBO         = [(3, 6), (0, 6)] #
-CHANGE_OFFSET                    = [(3, 4), (1, 4), (2, 5), (2, 3)] #
-PATTERN_SHIFT_MODE_COMBO         = [(3, 7), (0, 7)] #
-PATTERN_SHIFT_BUTTONS            = ((2, 4), (2, 6)) #
+MANUAL_CC_COMBO                  = [(3, 4), (0, 4)]
+MANUAL_NOTE_COMBO                = [(3, 4), (0, 5)]
+RECORD_NOTE_COMBO                = [(3, 5), (0, 5)]
+CLEAR_COMBO                      = [(3, 0), (0, 0), (3, 1)]
+SHIFT_MODE_COMBO                 = [(3, 0), (0, 0), (3, 2)]
+EDIT_CC_COMBO                    = [(3, 0), (0, 0), (3, 3)]
+OFFSET_CHANGE_MODE_COMBO         = [(3, 6), (0, 6)]
+CHANGE_OFFSET                    = [(3, 4), (1, 4), (2, 5), (2, 3)]
+PATTERN_SHIFT_MODE_COMBO         = [(3, 7), (0, 7)]
+PATTERN_SHIFT_BUTTONS            = ((2, 4), (2, 6))
 CHANGE_MANUAL_NOTE_CHANNEL_COMBO = [(3, 1), (2, 1), (0, 1)] 
-LAST_STEP_EDIT_COMBO             = [(2, 7), (0, 7)] #
-LAST_STEP_BUTTONS                = ((1, 3), (1, 4), (1, 5), (1, 6)) #
-SELECT_SLOT_MODE                 = [(3, 0), (0, 0), (3, 4)] #
-DELETE_SLOT_MODE                 = [(3, 0), (0, 0), (2, 4)] #
-DELETE_ALL_SLOTS_MODE            = [(3, 0), (0, 0), (1, 4)] #
+LAST_STEP_EDIT_COMBO             = [(2, 7), (0, 7)]
+LAST_STEP_BUTTONS                = ((1, 3), (1, 4), (1, 5), (1, 6))
+SELECT_SLOT_MODE                 = [(3, 0), (0, 0), (3, 4)]
+DELETE_SLOT_MODE                 = [(3, 0), (0, 0), (2, 4)]
+DELETE_ALL_SLOTS_MODE            = [(3, 0), (0, 0), (1, 4)]
 
 """
 Integers
@@ -467,7 +467,7 @@ toggled_cc = []
 reset_colors(notes, neop, NOTE_ON)
 
 while True:
-    
+
     """
     ======== Play Sequence ========
     """
