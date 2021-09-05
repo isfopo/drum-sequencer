@@ -161,3 +161,13 @@ This mode changes the parts of the sequence the visible gid represents. This mod
 Up and down will allow you to shift up and down four rows, changing the visible grid to the next or previous four midi notes, if pressing up, or the previous four notes. This will not extend beyond notes C2 to D3#.
 
 Left and right will shift left and right eight columns, changing the visible grid to the next or previous measure, given that you are in 4/4 time. If another measure is not within the last step, the grid will not change.
+
+### Pattern Shift Mode
+
+|     |     |     |     |     |     |     | x   |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|     |     |     |     | <   |     | >   |     |
+|     |     |     |     |     |     |     |     |
+|     |     |     |     |     |     |     | x   |
+
+This mode allows you to shift the entire pattern by eighth notes either forwards or back. To do so, hold the two buttons marked by x's, then press either the button marked left or right. Left will shift the pattern back one eighth note, with the first eighth note wrapping around to the end, and right will shift the pattern forward one eighth note, with the last eighth note wrapping around to the first.
